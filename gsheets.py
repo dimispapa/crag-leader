@@ -1,6 +1,7 @@
 import gspread
 from google.oauth2.service_account import Credentials
 
+
 class GoogleSheetsClient:
     """
     A client to interact with Google Sheets using gspread and Google OAuth2.
@@ -61,6 +62,7 @@ class GoogleSheetsClient:
         worksheet = sheet.worksheet(worksheet_name)
         return worksheet.get_all_values()
 
+
 def main():
     """
     Main function to create a GoogleSheetsClient instance and retrieve data from specified sheets.
@@ -85,6 +87,7 @@ def main():
 
     ascent_data = gsc.get_sheet_data("ascents", "data")
     print("Ascent Data:", ascent_data)
+
 
 if __name__ == "__main__":
     main()
