@@ -7,6 +7,8 @@ class Crag:
     A class to represent a crag, which contains associated boulders and boulder routes.
 
     Attributes:
+        crag_url (str): The base URL of the crag.
+        headers (dict): The HTTP headers to use for the requests.
         routelist_url (str): The full URL containing the route list.
         session (requests.Session): The requests session for making HTTP requests.
         boulders (list): List of Boulder instances associated with the crag.
@@ -14,7 +16,7 @@ class Crag:
 
     def __init__(self, crag_url, headers):
         """
-        Inits Crag class instance.
+        Initialize Crag class instance.
 
         Args:
             crag_url (str): The base URL of the crag.
@@ -33,6 +35,12 @@ class Crag:
         self.boulders = self.get_boulders()
 
     def get_boulders(self):
+        """
+        Retrieve the list of boulders for the crag.
+
+        Returns:
+            list: A list of Boulder instances.
+        """
         # get response from url
         response = self.session.get(
             url=self.routelist_url, headers=self.headers)
@@ -73,7 +81,7 @@ class Boulder:
 
     def __init__(self, name, url):
         """
-        Inits Boulder class instance.
+        Initialize Boulder class instance.
 
         Args:
             name (str): The name of the boulder.
@@ -83,6 +91,12 @@ class Boulder:
         self.url = url
 
     def __repr__(self):
+        """
+        Return a string representation of the Boulder instance.
+
+        Returns:
+            str: A string representation of the Boulder instance.
+        """
         return f"Boulder(name={self.name}, url={self.url})"
 
 
