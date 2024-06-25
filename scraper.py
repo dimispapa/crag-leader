@@ -3,7 +3,13 @@ from bs4 import BeautifulSoup
 
 
 class Crag:
+    """
+    A class to represent a crag.
 
+    Attributes:
+        crag_url (str): The base URL of the crag.
+        headers (dict): The HTTP headers to use for the requests.
+    """
     def __init__(self, crag_url, headers):
         self.crag_url = crag_url
         self.headers = headers
@@ -27,6 +33,13 @@ class Crag:
 
 
 class Boulder:
+    """
+    A class to represent a boulder.
+
+    Attributes:
+        name (str): The name of the boulder.
+        url (str): The URL of the boulder page.
+    """
 
     def __init__(self, name, url):
         self.name = name
