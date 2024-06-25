@@ -4,13 +4,21 @@ from bs4 import BeautifulSoup
 
 class Crag:
     """
-    A class to represent a crag.
+    A class to represent a crag, which contains associated boulders and boulder routes.
 
     Attributes:
-        crag_url (str): The base URL of the crag.
-        headers (dict): The HTTP headers to use for the requests.
+        routelist_url (str): The full URL containing the route list.
+        session (requests.Session): The requests session for making HTTP requests.
     """
+
     def __init__(self, crag_url, headers):
+        """
+        Inits Crag class instance.
+
+        Args:
+            crag_url (str): The base URL of the crag.
+            headers (dict): The HTTP headers to use for the requests.
+        """
         self.crag_url = crag_url
         self.headers = headers
         # define full url containing routelist
@@ -42,6 +50,13 @@ class Boulder:
     """
 
     def __init__(self, name, url):
+        """
+        Inits Boulder class instance.
+
+        Args:
+            name (str): The name of the boulder.
+            url (str): The URL of the boulder page.
+        """
         self.name = name
         self.url = url
 
