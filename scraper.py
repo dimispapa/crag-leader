@@ -76,19 +76,19 @@ class Boulder:
 
     Attributes:
         name (str): The name of the boulder.
-        url (str): The URL of the boulder page.
+        boulder_url (str): The URL of the boulder page.
     """
 
-    def __init__(self, name, url):
+    def __init__(self, name, boulder_url):
         """
         Initialize Boulder class instance.
 
         Args:
             name (str): The name of the boulder.
-            url (str): The URL of the boulder page.
+            boulder_url (str): The URL of the boulder page.
         """
         self.name = name
-        self.url = url
+        self.boulder_url = boulder_url
 
     def __repr__(self):
         """
@@ -97,8 +97,27 @@ class Boulder:
         Returns:
             str: A string representation of the Boulder instance.
         """
-        return f"Boulder(name={self.name}, url={self.url})"
+        return f"Boulder(name={self.name}, boulder_url={self.boulder_url})"
 
+
+class Route:
+    """
+    A class to represent a boulder route.
+    
+    Attributes:
+        name (str): The name of the route.
+        url (str): The URL of the route page.
+    """
+    def __init__(self, name, url):
+        """
+        Initialize Route class instance.
+
+        Args:
+            name (str): The name of the route.
+            url (str): The URL of the route page.
+        """
+        self.name = name
+        self.url = url
 
 # testing
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
