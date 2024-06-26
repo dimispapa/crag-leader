@@ -119,10 +119,14 @@ class Boulder:
             name (str): The name of the boulder.
             boulder_url (str): The URL of the boulder page.
             scraper (Scraper): The scraper instance to handle HTTP requests and HTML parsing.
+            routes (list): List of Routes instances associated with the boulder.
         """
         self.name = name
         self.url = url
         self.scraper = scraper
+
+        # call get_routes method and pass routes list as a boulder attribute
+        self.routes = self.get_routes()
 
     def __repr__(self):
         """
@@ -222,5 +226,15 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
 scraper = Scraper(HEADERS)
 inia_droushia_crag = Crag(CRAG_URL, scraper)
-routes = inia_droushia_crag.boulders.get_routes()
-print(routes)
+boulders = inia_droushia_crag.boulders
+print(len(boulders))
+
+all_routes = []
+for boulder in boulders:
+    all_routes.append(boulder.get_routes())
+
+print(len(all_routes))
+all_routes_flat = [route for route_list in all_routes for route in route_list]
+print(len(all_routes_flat))
+
+print(None)
