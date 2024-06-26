@@ -111,7 +111,7 @@ class Boulder:
         scraper (Scraper): The scraper instance to handle HTTP requests and HTML parsing.
     """
 
-    def __init__(self, name: str, boulder_url: str, scraper: Scraper):
+    def __init__(self, name: str, url: str, scraper: Scraper):
         """
         Initialize Boulder class instance.
 
@@ -121,7 +121,7 @@ class Boulder:
             scraper (Scraper): The scraper instance to handle HTTP requests and HTML parsing.
         """
         self.name = name
-        self.boulder_url = boulder_url
+        self.url = url
         self.scraper = scraper
 
     def __repr__(self):
@@ -131,7 +131,7 @@ class Boulder:
         Returns:
             str: A string representation of the Boulder instance.
         """
-        return f"Boulder(name={self.name}, boulder_url={self.boulder_url})"
+        return f"Boulder(name={self.name}, url={self.url})"
 
     def get_routes(self):
         """
@@ -142,7 +142,7 @@ class Boulder:
         """
 
         # scrape parsed html content from url
-        soup = self.scraper.get(self.boulder_url)
+        soup = self.scraper.get(self.url)
 
         # locate the tbody of the table element and the tr elements
         routes_table_tbody = soup.find('tbody')
@@ -155,21 +155,23 @@ class Boulder:
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
             route_url = anchor['href']
-            
+
             # get the grade and ensure consistent uppercase format i.e. "6C" not "6c"
             grade = tr_element.find(
                 'span', attrs={'class': 'grade'}).text.strip().upper()
-            
+
             # get the td elements to target based on index those not differentiated otherwise
             td_elements = tr_element.find_all('td')
             # extract the number of ascents
             no_of_ascents = td_elements[3].text.strip()
-            
+
             # get the rating
-            rating = tr_element.find('div', attrs={'class':'rating'}).text.strip()
-            
+            rating = tr_element.find(
+                'div', attrs={'class': 'rating'}).text.strip()
+
             # construct the Route object and add it to the routes list
-            route = Route(route_name, route_url, grade, int(no_of_ascents), float(rating))
+            route = Route(route_name, route_url, grade,
+                          int(no_of_ascents), float(rating))
             routes.append(route)
 
         return routes
@@ -204,6 +206,15 @@ class Route:
         self.ascents = ascents
         self.rating = rating
 
+    def __repr__(self):
+        """
+        Return a string representation of the Route instance.
+
+        Returns:
+            str: A string representation of the Route instance.
+        """
+        return f"Route(name={self.name}, route_url={self.url}, grade={self.grade}, ascents={self.ascents}, rating={self.rating})"
+
 
 # testing
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
@@ -211,5 +222,5 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
 scraper = Scraper(HEADERS)
 inia_droushia_crag = Crag(CRAG_URL, scraper)
-routes = inia_droushia_crag.boulders[0].get_routes()
+routes = inia_droushia_crag.boulders.get_routes()
 print(routes)
