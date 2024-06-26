@@ -11,7 +11,7 @@ class Scraper:
         session (requests.Session): The requests session for making HTTP requests.
         headers (dict): The HTTP headers to use for the requests.
     """
-
+    
     def __init__(self, headers):
         """
         Initialize Scraper class instance.
@@ -42,11 +42,12 @@ class Crag:
 
     Attributes:
         crag_url (str): The base URL of the crag.
+        base_url (str): The base URL of the website.
         scraper (Scraper): The scraper instance to handle HTTP requests and HTML parsing.
         routelist_url (str): The full URL containing the route list.
         boulders (list): List of Boulder instances associated with the crag.
     """
-
+    
     def __init__(self, crag_url, scraper):
         """
         Initialize Crag class instance.
@@ -56,6 +57,8 @@ class Crag:
             headers (dict): The HTTP headers to use for the requests.
         """
         self.crag_url = crag_url
+        # get the base 27crags domain url for use later
+        self.base_url = self.crag_url.split(".com")[0] + ".com"
         self.scraper = scraper
 
         # define full url containing routelist
@@ -86,10 +89,10 @@ class Crag:
             # extract attributes from anchor element
             name = boulder_elem.find(
                 'div', attrs={'class': 'name'}).text.strip()
-            url = boulder_elem['href']
+            url = self.base_url + boulder_elem['href'] # concat the boulder url on the base url
 
             # contstruct Boulder object and add to boulders list
-            boulder = Boulder(name, url)
+            boulder = Boulder(name, url, self.scraper)
             boulders.append(boulder)
 
         # return the boulders list
@@ -104,8 +107,8 @@ class Boulder:
         name (str): The name of the boulder.
         boulder_url (str): The URL of the boulder page.
     """
-
-    def __init__(self, name, boulder_url):
+    
+    def __init__(self, name, boulder_url, scraper):
         """
         Initialize Boulder class instance.
 
@@ -115,6 +118,7 @@ class Boulder:
         """
         self.name = name
         self.boulder_url = boulder_url
+        self.scraper = scraper
 
     def __repr__(self):
         """
@@ -125,6 +129,21 @@ class Boulder:
         """
         return f"Boulder(name={self.name}, boulder_url={self.boulder_url})"
 
+    def get_routes(self):
+        """
+        Retrieve the list of routes for the boulder.
+
+        Returns:
+            list: A list of Route instances.
+        """
+        
+        # scrape parsed html content from url
+        soup = self.scraper.get(self.boulder_url)
+        
+        # locate the table with class “route-list”
+        routes_table = soup.find('table', attrs={'class':'route-list'})
+        
+        return routes_table
 
 class Route:
     """
@@ -154,3 +173,5 @@ HEADERS = {
 scraper = Scraper(HEADERS)
 inia_droushia_crag = Crag(CRAG_URL, scraper)
 print(inia_droushia_crag.boulders)
+routes = inia_droushia_crag.boulders[0].get_routes()
+print(routes.prettify())
