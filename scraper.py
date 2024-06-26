@@ -2,6 +2,40 @@ import requests
 from bs4 import BeautifulSoup
 
 
+class Scraper:
+    """
+    A class to handle HTTP requests and HTML parsing.
+    Contains a get method to retrieve a response on a given URL.
+
+    Attributes:
+        session (requests.Session): The requests session for making HTTP requests.
+        headers (dict): The HTTP headers to use for the requests.
+    """
+
+    def __init__(self, headers):
+        """
+        Initialize Scraper class instance.
+
+        Args:
+            headers (dict): The HTTP headers to use for the requests.
+        """
+        self.headers = headers
+        self.session = requests.Session()
+
+    def get(self, url):
+        """
+        Make an HTTP GET request to the specified URL.
+
+        Args:
+            url (str): The URL to make the request to.
+
+        Returns:
+            BeautifulSoup: The parsed HTML content of the response.
+        """
+        response = self.session.get(url, headers=self.headers)
+        return BeautifulSoup(response.content, 'html5lib')
+
+
 class Crag:
     """
     A class to represent a crag, which contains associated boulders and boulder routes.
@@ -103,11 +137,12 @@ class Boulder:
 class Route:
     """
     A class to represent a boulder route.
-    
+
     Attributes:
         name (str): The name of the route.
         url (str): The URL of the route page.
     """
+
     def __init__(self, name, url):
         """
         Initialize Route class instance.
@@ -118,6 +153,7 @@ class Route:
         """
         self.name = name
         self.url = url
+
 
 # testing
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
