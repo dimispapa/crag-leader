@@ -278,17 +278,17 @@ class Route:
 
 
 # testing
-CRAG_URL = "https://27crags.com/crags/inia-droushia/"
-HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
-scraper = Scraper(HEADERS)
-inia_droushia_crag = Crag(CRAG_URL, scraper)
-# boulders = inia_droushia_crag.boulders
+# CRAG_URL = "https://27crags.com/crags/inia-droushia/"
+# HEADERS = {
+#     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
+# scraper = Scraper(HEADERS)
+# inia_droushia_crag = Crag(CRAG_URL, scraper)
+# # boulders = inia_droushia_crag.boulders
 
-# all_routes = []
-# for boulder in boulders:
-#     all_routes.append(boulder.get_routes())
+# # all_routes = []
+# # for boulder in boulders:
+# #     all_routes.append(boulder.get_routes())
 
-# all_routes_flat = [route for route_list in all_routes for route in route_list]
+# # all_routes_flat = [route for route_list in all_routes for route in route_list]
 
-print(None)
+# print(None)
