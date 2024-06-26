@@ -248,23 +248,28 @@ class Route:
 
             # loop through the log elements and extract ascent data
             for log in log_elements:
-                # get the climber's name
-                climber = log.find(
-                    'a', attrs={'class': 'action'}).text.strip()
-                # get the ascent type and format string to be all lower no spaces
-                ascent_type = log.find(
-                    'span', attrs={'class': 'ascent-type'}).text.strip().lower().replace(' ', '')
-                # get date of ascent and convert to datetime object
-                date_container = log.find(
-                    'div', attrs={'class': 'date'}).find_all(recursive=False)[-1]
-                date_string = date_container.text.strip()
-                date = datetime.strptime(date_string, '%Y-%m-%d').date()
+                try:
+                    # get the climber's name
+                    climber = log.find(
+                        'a', attrs={'class': 'action'}).text.strip()
+                    # get the ascent type and format string to be all lower no spaces
+                    ascent_type = log.find(
+                        'span', attrs={'class': 'ascent-type'}).text.strip().lower().replace(' ', '')
+                    # get date of ascent and convert to datetime object
+                    date_container = log.find(
+                        'div', attrs={'class': 'date'}).find_all(recursive=False)[-1]
+                    date_string = date_container.text.strip()
+                    date = datetime.strptime(date_string, '%Y-%m-%d').date()
 
-                # form a dictionary and add to ascent_log list
-                ascent_dict = {'climber_name': climber,
-                               'ascent_type': ascent_type,
-                               'ascent_date': date}
-                ascent_log.append(ascent_dict)
+                    # form a dictionary and add to ascent_log list
+                    ascent_dict = {'climber_name': climber,
+                                   'ascent_type': ascent_type,
+                                   'ascent_date': date}
+                    ascent_log.append(ascent_dict)
+
+                # if the item has no attribute ascent_type i.e. to-do list item continue to next item
+                except AttributeError:
+                    continue
 
         else:
             print(f'no logs for route: {self.name}')
