@@ -236,15 +236,43 @@ class Route:
 
     def get_ascent_log(self):
         """
-        Retrieve the ascent log for the route.
+        Retrieve the ascent log for the route, including additional ascents.
 
         Returns:
             list: A list of dictionaries containing climber's name, ascent type and date.
         """
 
-        # scrape parsed html content from url
-        print(f'Scraping ascent log info from {self.url} for "{self.name}" route ...\n')
+        # Get the initial page and parse the HTML
+        print(f'Scraping ascent log info from "{self.url}" for "{self.name}" route ...\n')
         soup = self.scraper.get(self.url)
+        ascent_log = self.extract_ascent_log(soup)
+        
+        # Check for the "More ascents" button and fetch additional ascents if available
+        more_ascents_button = soup.find('div', class_='js-more ticks text-center')
+        if more_ascents_button:
+            # access the anchor element and get the href link for the file with the printed json file
+            more_ascents_url = more_ascents_button.find('a')['href']
+            if more_ascents_url:
+                # get full URL for scraper to access
+                full_more_ascents_url = self.base_url + more_ascents_url
+                # scrape additional ascents
+                print(f'Scraping additional ascents from "{full_more_ascents_url}" ...\n')
+                more_ascents_soup = self.scraper.get(full_more_ascents_url)
+                # call method to extract the info from the parsed HTML
+                additional_ascent_log = self.extract_ascent_log(more_ascents_soup)
+                # extend the ascent_log list with the additional ascents
+                ascent_log.extend(additional_ascent_log)
+        
+    def extract_ascent_log(self, soup: BeautifulSoup):
+        """
+        Extract the climbing log from the provided BeautifulSoup object.
+
+        Args:
+            soup (BeautifulSoup): The BeautifulSoup object containing the HTML content.
+
+        Returns:
+            list: A list of dictionaries containing climber's name, ascent type, and date.
+        """
         # locate the log elements containing the ascents
         log_elements = soup.find_all('div', attrs={'class': 'result-row'})
 
@@ -275,7 +303,8 @@ class Route:
                                    'ascent_date': date}
                     ascent_log.append(ascent_dict)
 
-                # if the item has no attribute ascent_type i.e. to-do list item continue to next item
+                # Handle error if the item has no attribute ascent_type
+                # i.e. it is a public to-do list item, then continue to next item
                 except AttributeError:
                     continue
 
@@ -283,4 +312,3 @@ class Route:
             print(f'no logs for route: {self.name}')
 
         return ascent_log
-
