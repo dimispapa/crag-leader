@@ -151,7 +151,7 @@ class Boulder:
         """
 
         # scrape parsed html content from url
-        print(f'Scraping list of routes from {self.url} for "{self.name}" boulder ...\n')
+        print(f'Scraping list of routes from "{self.url}" for "{self.name}" boulder ...\n')
         soup = self.scraper.get(self.url)
 
         # locate the tbody of the table element and the tr elements
@@ -164,7 +164,7 @@ class Boulder:
             # get the anchor element in the tr and extract name and url
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
-            print(f'Extracting route info for "{self.name}"...\n')
+            print(f'Extracting route info for "{route_name}"...\n')
             # concat the route url on the base url
             route_url = self.base_url + anchor['href']
 
