@@ -1,1 +1,14 @@
-# Your requirements go here
+cachetools==5.3.3
+google-auth==2.30.0
+google-auth-oauthlib==1.2.0
+gspread==6.1.2
+html5lib==1.1
+numpy==2.0.0
+oauthlib==3.2.2
+pandas==2.2.2
+pyasn1==0.6.0
+pyasn1_modules==0.4.0
+pytz==2024.1
+requests-oauthlib==2.0.0
+rsa==4.9
+tzdata==2024.1
