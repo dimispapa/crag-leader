@@ -164,7 +164,7 @@ class Boulder:
             # get the anchor element in the tr and extract name and url
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
-            print(f'Extracting route info for "{route.name}"...\n')
+            print(f'Extracting route info for "{self.name}"...\n')
             # concat the route url on the base url
             route_url = self.base_url + anchor['href']
 
