@@ -1,3 +1,7 @@
+"""
+Helper module to allow interaction with and writing/fetching data
+to/from Google Sheets on a Google Drive location.
+"""
 import gspread
 from google.oauth2.service_account import Credentials
 
@@ -7,18 +11,23 @@ class GoogleSheetsClient:
     A client to interact with Google Sheets using gspread and Google OAuth2.
 
     Attributes:
-        creds_file (str): Path to the JSON file with Google service account credentials.
-        scope (list): List of OAuth2 scope for accessing Google Sheets and Drive.
+        creds_file (str): Path to the JSON file with Google service account
+                            credentials.
+        scope (list): List of OAuth2 scope for accessing Google Sheets and
+                        Drive.
         client (gspread.Client): Authorized gspread client.
     """
 
     def __init__(self, creds_file, scope):
         """
-        Initialize the GoogleSheetsClient with the given credentials file and scope.
+        Initialize the GoogleSheetsClient with the given credentials file and
+        scope.
 
         Args:
-            creds_file (str): Path to the JSON file with Google service account credentials.
-            scope (list): List of OAuth2 scope for accessing Google Sheets and Drive.
+            creds_file (str): Path to the JSON file with Google service
+                                account credentials.
+            scope (list): List of OAuth2 scope for accessing Google Sheets and
+                            Drive.
         """
         self.creds_file = creds_file
         self.scope = scope
@@ -53,7 +62,8 @@ class GoogleSheetsClient:
 
         Args:
             sheet_name (str): The name of the Google Sheet.
-            worksheet_name (str): The name of the worksheet within the Google Sheet.
+            worksheet_name (str): The name of the worksheet within the Google
+                                    Sheet.
 
         Returns:
             list: A list of lists containing the worksheet data.
@@ -65,7 +75,8 @@ class GoogleSheetsClient:
 
 def main():
     """
-    Main function to create a GoogleSheetsClient instance and retrieve data from specified sheets.
+    Main function to create a GoogleSheetsClient instance and retrieve data
+    from specified sheets.
     """
     # Define the scope and credentials file
     SCOPE = [
