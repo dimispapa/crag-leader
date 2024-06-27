@@ -75,6 +75,7 @@ class Crag:
             list: A list of Boulder instances.
         """
         # scrape parsed html content from url
+        print(f'Scraping boulder list from {self.url} for "{self.name}" crag...\n')
         soup = self.scraper.get(self.routelist_url)
 
         # locate anchor elements with "sector-item" class.
@@ -85,10 +86,12 @@ class Crag:
         boulders = []  # initialize empty boulders list
 
         # loop through the boulder elements and extract the boulder name and url
+        print(f"Extracting boulder info...\n")
         for boulder_elem in boulder_elements:
             # extract attributes from anchor element
             boulder_name = boulder_elem.find(
                 'div', attrs={'class': 'name'}).text.strip()
+            print(f'Processing boulder info for "{boulder_name}"...\n')
             # concat the boulder url on the base url
             boulder_url = self.base_url + boulder_elem['href']
 
@@ -147,6 +150,7 @@ class Boulder:
         """
 
         # scrape parsed html content from url
+        print(f'Scraping list of routes from {self.url} for "{self.name}" boulder...\n')
         soup = self.scraper.get(self.url)
 
         # locate the tbody of the table element and the tr elements
@@ -159,6 +163,7 @@ class Boulder:
             # get the anchor element in the tr and extract name and url
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
+            print(f'Extracting route info for "{route.name}"...\n')
             # concat the route url on the base url
             route_url = self.base_url + anchor['href']
 
@@ -237,6 +242,7 @@ class Route:
         """
 
         # scrape parsed html content from url
+        print(f'Scraping ascent log info from {self.url} for "{self.name}" route...\n')
         soup = self.scraper.get(self.url)
         # locate the log elements containing the ascents
         log_elements = soup.find_all('div', attrs={'class': 'result-row'})
@@ -252,6 +258,7 @@ class Route:
                     # get the climber's name
                     climber = log.find(
                         'a', attrs={'class': 'action'}).text.strip()
+                    print(f'Processing ascent log info of climber "{climber}"...')
                     # get the ascent type and format string to be all lower no spaces
                     ascent_type = log.find(
                         'span', attrs={'class': 'ascent-type'}).text.strip().lower().replace(' ', '')
