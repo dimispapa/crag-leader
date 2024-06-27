@@ -65,7 +65,7 @@ class Crag:
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
-        print(f"Please wait while the scraper is retrieving info from {self.routelist_url}...\n")
+        print(f"Please wait while the scraper is retrieving info from '{self.crag_url}' ...\n")
         self.boulders = self.get_boulders()
 
     def get_boulders(self):
@@ -76,7 +76,7 @@ class Crag:
             list: A list of Boulder instances.
         """
         # scrape parsed html content from url
-        print(f'Scraping boulder list for "{self.name}" crag...\n')
+        print(f'Scraping boulder list from "{self.routelist_url}" crag...\n')
         soup = self.scraper.get(self.routelist_url)
 
         # locate anchor elements with "sector-item" class.
@@ -92,7 +92,7 @@ class Crag:
             # extract attributes from anchor element
             boulder_name = boulder_elem.find(
                 'div', attrs={'class': 'name'}).text.strip()
-            print(f'Processing boulder info for "{boulder_name}"...\n')
+            print(f'Processing boulder info for "{boulder_name}" ...\n')
             # concat the boulder url on the base url
             boulder_url = self.base_url + boulder_elem['href']
 
@@ -151,7 +151,7 @@ class Boulder:
         """
 
         # scrape parsed html content from url
-        print(f'Scraping list of routes from {self.url} for "{self.name}" boulder...\n')
+        print(f'Scraping list of routes from {self.url} for "{self.name}" boulder ...\n')
         soup = self.scraper.get(self.url)
 
         # locate the tbody of the table element and the tr elements
@@ -243,7 +243,7 @@ class Route:
         """
 
         # scrape parsed html content from url
-        print(f'Scraping ascent log info from {self.url} for "{self.name}" route...\n')
+        print(f'Scraping ascent log info from {self.url} for "{self.name}" route ...\n')
         soup = self.scraper.get(self.url)
         # locate the log elements containing the ascents
         log_elements = soup.find_all('div', attrs={'class': 'result-row'})
@@ -259,7 +259,7 @@ class Route:
                     # get the climber's name
                     climber = log.find(
                         'a', attrs={'class': 'action'}).text.strip()
-                    print(f'Processing ascent log info of climber "{climber}"...\n')
+                    print(f'Processing ascent log info of climber "{climber}" ...\n')
                     # get the ascent type and format string to be all lower no spaces
                     ascent_type = log.find(
                         'span', attrs={'class': 'ascent-type'}).text.strip().lower().replace(' ', '')
