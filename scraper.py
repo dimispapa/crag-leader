@@ -65,6 +65,7 @@ class Crag:
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
+        print(f"Please wait while the scraper is retrieving info from {self.routelist_url}...\n")
         self.boulders = self.get_boulders()
 
     def get_boulders(self):
@@ -258,7 +259,7 @@ class Route:
                     # get the climber's name
                     climber = log.find(
                         'a', attrs={'class': 'action'}).text.strip()
-                    print(f'Processing ascent log info of climber "{climber}"...')
+                    print(f'Processing ascent log info of climber "{climber}"...\n')
                     # get the ascent type and format string to be all lower no spaces
                     ascent_type = log.find(
                         'span', attrs={'class': 'ascent-type'}).text.strip().lower().replace(' ', '')
@@ -283,19 +284,3 @@ class Route:
 
         return ascent_log
 
-
-# testing
-# CRAG_URL = "https://27crags.com/crags/inia-droushia/"
-# HEADERS = {
-#     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'}
-# scraper = Scraper(HEADERS)
-# inia_droushia_crag = Crag(CRAG_URL, scraper)
-# # boulders = inia_droushia_crag.boulders
-
-# # all_routes = []
-# # for boulder in boulders:
-# #     all_routes.append(boulder.get_routes())
-
-# # all_routes_flat = [route for route_list in all_routes for route in route_list]
-
-# print(None)
