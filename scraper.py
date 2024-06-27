@@ -76,7 +76,7 @@ class Crag:
             list: A list of Boulder instances.
         """
         # scrape parsed html content from url
-        print(f'Scraping boulder list from {self.url} for "{self.name}" crag...\n')
+        print(f'Scraping boulder list for "{self.name}" crag...\n')
         soup = self.scraper.get(self.routelist_url)
 
         # locate anchor elements with "sector-item" class.
