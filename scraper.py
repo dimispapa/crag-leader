@@ -77,8 +77,8 @@ class Crag:
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
-        print(f"Please wait while the scraper is retrieving info from ' \
-            {self.crag_url}' ...\n")
+        print("Please wait while the scraper is retrieving info from "
+              f"'{self.crag_url}' ...\n")
         self.boulders = self.get_boulders()
 
     def get_boulders(self):
@@ -169,8 +169,8 @@ class Boulder:
         """
 
         # scrape parsed html content from url
-        print(f'Scraping list of routes from "{self.url}" for "{self.name}" \
-            boulder ...\n')
+        print(f'Scraping list of routes from "{self.url}" for "{self.name}" '
+              'boulder ...\n')
         soup = self.scraper.get(self.url)
 
         # locate the tbody of the table element and the tr elements
@@ -272,8 +272,8 @@ class Route:
         """
 
         # Get the initial page and parse the HTML
-        print(f'Scraping ascent log info from "{self.url}" for "{self.name}" \
-            route ...\n')
+        print(f'Scraping ascent log info from "{self.url}" for "{self.name}" '
+              'route ...\n')
         soup = self.scraper.get(self.url)
         ascent_log = self.extract_ascent_log(soup)
 
@@ -289,8 +289,8 @@ class Route:
                 # get full URL for scraper to access
                 full_more_ascents_url = self.url + more_ascents_url
                 # scrape additional ascents
-                print(f'Scraping additional ascents from " \
-                    {full_more_ascents_url}" ...\n')
+                print('Scraping additional ascents from '
+                      f'"{full_more_ascents_url}" ...\n')
                 more_ascents_soup = self.scraper.get(full_more_ascents_url)
                 # call method to extract the info from the parsed HTML
                 additional_ascent_log = self.extract_ascent_log(
@@ -326,14 +326,14 @@ class Route:
                     # get the climber's name
                     climber = log.find(
                         'a', attrs={'class': 'action'}).text.strip()
-                    print('Processing ascent log'
+                    print('Processing ascent log '
                           f'info of climber "{climber}" ...\n')
                     # get the ascent type and format string to be
                     # all lower no spaces
                     ascent_type = log.find(
                         'span',
                         attrs={'class': 'ascent-type'}
-                        ).text.strip().lower().replace(' ', '')
+                    ).text.strip().lower().replace(' ', '')
                     # get date of ascent and convert to datetime object
                     date_container = log.find(
                         'div',

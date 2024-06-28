@@ -36,14 +36,14 @@ def main():
     scraper = Scraper(HEADERS)
     crag = Crag(CRAG_URL, scraper)
     print(f"Size of '{crag.crag_url}' crag: \
-        {len(crag.boulders)}")
+    {len(crag.boulders)}")
 
     # Create an instance of GoogleSheetsClient
     gsc = GoogleSheetsClient(CREDS_FILE, SCOPE)
 
     # create a crag_name variable from the url to use for the gsheet name
-    crag_name = CRAG_URL.split("/")[-2].replace("-","_")
-    
+    crag_name = CRAG_URL.split("/")[-2].replace("-", "_")
+
     # open or create the gsheet if not exists
     gsheet = gsc.get_or_create_gsheet(crag_name)
 
