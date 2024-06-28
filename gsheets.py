@@ -61,7 +61,8 @@ class GoogleSheetsClient:
 
         except gspread.SpreadsheetNotFound:
             return print(f'Error: The Google Sheet "{gsheet_name}" '
-                         'does not exist, check the name and try again.')
+                         'does not exist, please create a Google sheet file'
+                         f' with the name "{gsheet_name}".')
         return gsheet
 
     def get_sheet_data(self, gsheet_name: str, worksheet_name: str):
@@ -79,11 +80,12 @@ class GoogleSheetsClient:
         try:
             gsheet = self.client.open(gsheet_name)
             worksheet = gsheet.worksheet(worksheet_name)
-            return worksheet.get_all_values()
+            return worksheet.get_all_records()
 
         except gspread.SpreadsheetNotFound:
-            return print(f'Error: The Google Sheet "{gsheet_name}" '
-                         'does not exist, check the name and try again.')
+            return print('Error: The data does not exist. '
+                         'Please choose the "scrape" option to'
+                         'retrieve data from 27crags.')
 
     def write_data_to_sheet(self,
                             gsheet_name: str,
