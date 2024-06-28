@@ -4,6 +4,8 @@ to/from Google Sheets on a Google Drive location.
 """
 import gspread
 from google.oauth2.service_account import Credentials
+from gspread_dataframe import set_with_dataframe
+from pandas import DataFrame
 
 
 class GoogleSheetsClient:
@@ -56,6 +58,7 @@ class GoogleSheetsClient:
         """
         try:
             gsheet = self.client.open(gsheet_name)
+
         except gspread.SpreadsheetNotFound:
             return print(f'Error: The Google Sheet "{gsheet_name}" '
                          'does not exist, check the name and try again.')
@@ -83,16 +86,16 @@ class GoogleSheetsClient:
                          'does not exist, check the name and try again.')
 
     def write_data_to_sheet(self,
-                            gsheet_name: str, worksheet_name: str,
-                            data: list, headers: list):
+                            gsheet_name: str,
+                            worksheet_name: str,
+                            dataframe: DataFrame):
         """
         Writes data to worksheet in Google Sheet.
 
         Args:
             gsheet_name (str): The name of the Google Sheet.
             worksheet_name (str): The worksheet of the Google Sheet.
-            data (list): The list representing the data.
-            headers (list): The list of defined header name strings.
+            data (dict): The dictionary representing the data.
         """
 
         # first open or create the gsheet
@@ -100,13 +103,12 @@ class GoogleSheetsClient:
         # access the worksheet or create if not exists
         try:
             worksheet = gsheet.worksheet(worksheet_name)
+
         except gspread.WorksheetNotFound:
             worksheet = gsheet.add_worksheet(
                 title=worksheet_name, rows=1000, cols=10)
+
         # clear the worksheet
         worksheet.clear()
-        # append the headers
-        worksheet.append_row(headers)
-        # iterate through the data and append row by row
-        for row in data:
-            worksheet.append_row(row)
+        # write the dataframe to the worksheet
+        set_with_dataframe(worksheet, dataframe)

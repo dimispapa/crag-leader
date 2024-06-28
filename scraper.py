@@ -259,8 +259,9 @@ class Route:
         Returns:
             str: A string representation of the Route instance.
         """
-        return f"Route(name={self.name}, route_url={self.url}, \
-            grade={self.grade}, ascents={self.ascents}, rating={self.rating})"
+        return (f"Route(name={self.name}, route_url={self.url}, "
+                f"grade={self.grade}, ascents={self.ascents}, "
+                f"rating={self.rating}")
 
     def get_ascent_log(self):
         """
