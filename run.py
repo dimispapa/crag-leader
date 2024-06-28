@@ -1,7 +1,7 @@
 """
 The main application file used to run the program.
 
-Imports the necessary classes/functions from the helper .py files:
+Imports the necessary classes/functions from the following modules:
 - gsheets.py
 - scraper.py
 """
@@ -34,12 +34,18 @@ def main():
 
     # Initialize a scraper instance and store data in an object
     scraper = Scraper(HEADERS)
-    inia_droushia_crag = Crag(CRAG_URL, scraper)
-    print(f"Size of '{inia_droushia_crag.crag_url}' crag: \
-        {len(inia_droushia_crag.boulders)}")
+    crag = Crag(CRAG_URL, scraper)
+    print(f"Size of '{crag.crag_url}' crag: \
+        {len(crag.boulders)}")
 
     # Create an instance of GoogleSheetsClient
     gsc = GoogleSheetsClient(CREDS_FILE, SCOPE)
+
+    # create a crag_name variable from the url to use for the gsheet name
+    crag_name = CRAG_URL.split("/")[-2].replace("-","_")
+    
+    # open or create the gsheet if not exists
+    gsheet = gsc.get_or_create_gsheet(crag_name)
 
 
 if __name__ == "__main__":

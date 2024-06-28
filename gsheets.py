@@ -44,18 +44,22 @@ class GoogleSheetsClient:
         scoped_creds = creds.with_scopes(self.scope)
         return gspread.authorize(scoped_creds)
 
-    def open_sheet(self, sheet_name):
+    def get_or_create_gsheet(self, gsheet_name: str):
         """
-        Open a Google Sheet by its name.
+        Open a Google Sheet by its name or create if not exists.
 
         Args:
-            sheet_name (str): The name of the Google Sheet to open.
+            gsheet_name (str): The name of the Google Sheet to open.
 
         Returns:
-            gspread.Spreadsheet: The opened Google Sheet.
+            gspread.Spreadsheet: The opened/created Google Sheet.
         """
-        return self.client.open(sheet_name)
-
+        try:
+            gsheet = self.client.open(gsheet_name)
+        except gspread.SpreadsheetNotFound:
+            gsheet = self.client.create(gsheet_name)
+        return gsheet
+    
     def get_sheet_data(self, sheet_name, worksheet_name):
         """
         Retrieve all values from a specific worksheet in a Google Sheet.
