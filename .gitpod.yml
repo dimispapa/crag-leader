@@ -11,4 +11,7 @@ vscode:
     - eventyret.bootstrap-4-cdn-snippet
     - hookyqr.beautify
     - matt-rudge.auto-open-preview-panel
+    - ms-python.autopep8
+    - ms-python.flake8
+    - ms-python.pylint
 
