@@ -82,7 +82,7 @@ class GoogleSheetsClient:
             worksheet = gsheet.worksheet(worksheet_name)
             return worksheet.get_all_records()
 
-        except gspread.SpreadsheetNotFound:
+        except gspread.WorksheetNotFound:
             return print('Error: The data does not exist. '
                          'Please choose the "scrape" option to '
                          'retrieve data from 27crags.')
