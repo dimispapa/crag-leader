@@ -45,8 +45,8 @@ def main():
     crag_name = CRAG_URL.split("/")[-2].replace("-", "_")
 
     # write data to gsheet (Test)
-    gsc.write_data_to_sheet(crag_name, 'Testsheet', [
-        'Data1', 'Data2'], ['Test1', 'Test2'])
+    gsc.write_data_to_sheet(crag_name, 'Testsheet',
+                            [['Data1', 'Data2']], ['Test1', 'Test2'])
     print(gsc.get_sheet_data(crag_name, 'Testsheet'))
 
 

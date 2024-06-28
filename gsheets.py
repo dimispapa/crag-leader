@@ -57,7 +57,8 @@ class GoogleSheetsClient:
         try:
             gsheet = self.client.open(gsheet_name)
         except gspread.SpreadsheetNotFound:
-            gsheet = self.client.create(gsheet_name)
+            return print(f'Error: The Google Sheet "{gsheet_name}" '
+                         'does not exist, check the name and try again.')
         return gsheet
 
     def get_sheet_data(self, gsheet_name: str, worksheet_name: str):
@@ -90,14 +91,18 @@ class GoogleSheetsClient:
         Args:
             gsheet_name (str): The name of the Google Sheet.
             worksheet_name (str): The worksheet of the Google Sheet.
-            data (list): The list of dictionaries representing the data.
+            data (list): The list representing the data.
             headers (list): The list of defined header name strings.
         """
 
         # first open or create the gsheet
         gsheet = self.get_or_create_gsheet(gsheet_name)
-        # access the worksheet
-        worksheet = gsheet.worksheet(worksheet_name)
+        # access the worksheet or create if not exists
+        try:
+            worksheet = gsheet.worksheet(worksheet_name)
+        except gspread.WorksheetNotFound:
+            worksheet = gsheet.add_worksheet(
+                title=worksheet_name, rows=1000, cols=10)
         # clear the worksheet
         worksheet.clear()
         # append the headers
