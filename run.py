@@ -160,7 +160,7 @@ def get_user_choice():
         # Case-insesitive and remove leading/trailing spaces
         choice = input(
             "Do you want to scrape the latest data from 27crags or retrieve"
-            "existing data? \n(scrape/retrieve): \n"
+            " existing data? \n(scrape/retrieve): \n"
         ).strip().lower()
 
         # validate user choice
