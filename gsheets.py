@@ -78,21 +78,10 @@ class GoogleSheetsClient:
         Returns:
             list: A list of lists containing the worksheet data.
         """
-        try:
-            gsheet = self.client.open(gsheet_name)
-            worksheet = gsheet.worksheet(worksheet_name)
-            return worksheet.get_all_records()
 
-        except gspread.WorksheetNotFound:
-            return print(f'Error: The worksheet {worksheet_name} does '
-                         'not exist. Please choose the "scrape" option to '
-                         'retrieve data from 27crags.\n')
-
-        except gspread.SpreadsheetNotFound:
-            return print(f'Error: The Google Sheet "{gsheet_name}" '
-                         'does not exist, please create a Google sheet file'
-                         f' with name "{gsheet_name}" and then choose '
-                         'to "scrape".\n')
+        gsheet = self.client.open(gsheet_name)
+        worksheet = gsheet.worksheet(worksheet_name)
+        return worksheet.get_all_records()
 
     def write_data_to_sheet(self,
                             gsheet_name: str,

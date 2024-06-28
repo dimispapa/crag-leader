@@ -7,6 +7,7 @@ Imports the necessary classes/functions from the following modules:
 """
 
 import pandas as pd
+from gspread import WorksheetNotFound, SpreadsheetNotFound
 from scraper import Scraper, Crag
 from gsheets import GoogleSheetsClient
 
@@ -135,12 +136,24 @@ def retrieve_data():
     """
 
     # Retrieve data from worksheets
-    boulder_data = pd.DataFrame(
-        GSC.get_sheet_data('data', 'boulders'))
-    route_data = pd.DataFrame(
-        GSC.get_sheet_data('data', 'routes'))
-    ascent_data = pd.DataFrame(
-        GSC.get_sheet_data('data', 'ascents'))
+    try:
+        boulder_data = pd.DataFrame(
+            GSC.get_sheet_data('data', 'boulders'))
+        route_data = pd.DataFrame(
+            GSC.get_sheet_data('data', 'routes'))
+        ascent_data = pd.DataFrame(
+            GSC.get_sheet_data('data', 'ascents'))
+
+    except WorksheetNotFound:
+        return print('Error: The data does '
+                     'not exist. Please choose the "scrape" option to '
+                     'retrieve data from 27crags.\n')
+
+    except SpreadsheetNotFound:
+        return print('Error: The Google Sheet file '
+                     'does not exist, please create a Google sheet file'
+                     ' with name "data" and then choose '
+                     'to "scrape".\n')
 
     print("Data retrieval from Google Sheets completed.\n")
 
