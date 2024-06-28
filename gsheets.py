@@ -84,7 +84,7 @@ class GoogleSheetsClient:
 
         except gspread.SpreadsheetNotFound:
             return print('Error: The data does not exist. '
-                         'Please choose the "scrape" option to'
+                         'Please choose the "scrape" option to '
                          'retrieve data from 27crags.')
 
     def write_data_to_sheet(self,
