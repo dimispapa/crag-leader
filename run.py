@@ -12,33 +12,74 @@ from gsheets import GoogleSheetsClient
 
 
 def compile_data(crag: Crag):
-    boulder_data = pd.DataFrame([(b.name, b.url) for b in crag.boulders],
-                                columns=["Boulder Name", "Boulder URL"])
+    """
+    Compile data from a Crag instance into pandas DataFrames for boulders,
+    routes, and ascents.
 
+    Args:
+        crag (Crag): An instance of the Crag class containing the scraped data.
+
+    Returns:
+        Three pandas DataFrames:
+            - boulder_data: DataFrame with boulder information.
+            - route_data: DataFrame with route information.
+            - ascent_data: DataFrame with ascent information.
+    """
+
+    # Create a DataFrame for boulders with their names, URLs,
+    # and lists of associated routes
+    boulder_data = pd.DataFrame([(b.name,
+                                  b.url,
+                                  [route.name for route in b.routes])
+                                 for b in crag.boulders],
+                                columns=["Boulder Name",
+                                         "Boulder URL",
+                                         "Route List"])
+
+    # Initialize lists to hold route and ascent data
     route_data = []
     ascent_data = []
 
+    # Iterate through each boulder in the crag
     for boulder in crag.boulders:
+        # Iterate through each route in the current boulder
         for route in boulder.routes:
+            # Append route information to route_data list
             route_data.append(
                 (route.name,
+                 boulder.name,
                  route.url,
                  route.grade,
                  route.ascents,
                  route.rating))
+            # Iterate through each ascent log in the current route
             for ascent in route.ascent_log:
+                # Append ascent information to ascent_data list
                 ascent_data.append(
                     (route.name,
+                     boulder.name,
                      ascent['climber_name'],
                      ascent['ascent_type'],
                      ascent['ascent_date'].strftime('%Y-%m-%d')))
 
+    # Create DataFrame for route data
     route_data = pd.DataFrame(
         route_data,
-        columns=["Route Name", "Route URL", "Grade", "Ascents", "Rating"])
+        columns=["Route Name",
+                 "Boulder Name",
+                 "Route URL",
+                 "Grade",
+                 "Ascents",
+                 "Rating"])
+
+    # Create DataFrame for ascent data
     ascent_data = pd.DataFrame(
         ascent_data,
-        columns=["Route Name", "Climber Name", "Ascent Type", "Ascent Date"])
+        columns=["Route Name",
+                 "Boulder Name",
+                 "Climber Name",
+                 "Ascent Type",
+                 "Ascent Date"])
 
     return boulder_data, route_data, ascent_data
 
@@ -68,16 +109,17 @@ def main():
     # Initialize a scraper instance and store data in an object
     scraper = Scraper(HEADERS)
     crag = Crag(CRAG_URL, scraper)
-    print(f"Size of '{crag.crag_url}' crag: \
-    {len(crag.boulders)}")
+    print("Crag successfully scraped!\n")
 
     # Create an instance of GoogleSheetsClient
     gsc = GoogleSheetsClient(CREDS_FILE, SCOPE)
 
     # prepare data for google sheets
+    print("Compiling data to write to google sheets ...\n")
     boulder_data, route_data, ascent_data = compile_data(crag)
 
     # write data to gsheet
+    print("Writing data to google sheets ...\n")
     gsc.write_data_to_sheet('data', 'boulders', boulder_data)
     gsc.write_data_to_sheet('data', 'routes', route_data)
     gsc.write_data_to_sheet('data', 'ascents', ascent_data)
