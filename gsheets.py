@@ -71,34 +71,3 @@ class GoogleSheetsClient:
         sheet = self.open_sheet(sheet_name)
         worksheet = sheet.worksheet(worksheet_name)
         return worksheet.get_all_values()
-
-
-def main():
-    """
-    Main function to create a GoogleSheetsClient instance and retrieve data
-    from specified sheets.
-    """
-    # Define the scope and credentials file
-    SCOPE = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive.file",
-        "https://www.googleapis.com/auth/drive"
-    ]
-    CREDS_FILE = "creds.json"
-
-    # Create an instance of GoogleSheetsClient
-    gsc = GoogleSheetsClient(CREDS_FILE, SCOPE)
-
-    # Access and print data from boulders, routes, and ascents sheets
-    boulder_data = gsc.get_sheet_data("boulders", "data")
-    print("Boulder Data:", boulder_data)
-
-    route_data = gsc.get_sheet_data("routes", "data")
-    print("Route Data:", route_data)
-
-    ascent_data = gsc.get_sheet_data("ascents", "data")
-    print("Ascent Data:", ascent_data)
-
-
-if __name__ == "__main__":
-    main()
