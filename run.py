@@ -44,8 +44,10 @@ def main():
     # create a crag_name variable from the url to use for the gsheet name
     crag_name = CRAG_URL.split("/")[-2].replace("-", "_")
 
-    # open or create the gsheet if not exists
-    gsheet = gsc.get_or_create_gsheet(crag_name)
+    # write data to gsheet (Test)
+    gsc.write_data_to_sheet(crag_name, 'Testsheet', [
+        'Data1', 'Data2'], ['Test1', 'Test2'])
+    print(gsc.get_sheet_data(crag_name, 'Testsheet'))
 
 
 if __name__ == "__main__":
