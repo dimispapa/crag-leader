@@ -63,7 +63,7 @@ class GoogleSheetsClient:
             return print(f'Error: The Google Sheet "{gsheet_name}" '
                          'does not exist, please create a Google sheet file'
                          f' with the name "{gsheet_name}" and then choose '
-                         'to "scrape".')
+                         'to "scrape".\n')
         return gsheet
 
     def get_sheet_data(self, gsheet_name: str, worksheet_name: str):
@@ -84,15 +84,15 @@ class GoogleSheetsClient:
             return worksheet.get_all_records()
 
         except gspread.WorksheetNotFound:
-            return print('Error: The data does not exist. '
-                         'Please choose the "scrape" option to '
-                         'retrieve data from 27crags.')
+            return print(f'Error: The worksheet {worksheet_name} does '
+                         'not exist. Please choose the "scrape" option to '
+                         'retrieve data from 27crags.\n')
 
         except gspread.SpreadsheetNotFound:
             return print(f'Error: The Google Sheet "{gsheet_name}" '
                          'does not exist, please create a Google sheet file'
-                         f' with the name "{gsheet_name}" and then choose '
-                         'to "scrape".')
+                         f' with name "{gsheet_name}" and then choose '
+                         'to "scrape".\n')
 
     def write_data_to_sheet(self,
                             gsheet_name: str,
