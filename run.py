@@ -142,7 +142,7 @@ def retrieve_data():
     ascent_data = pd.DataFrame(
         GSC.get_sheet_data('data', 'ascents'))
 
-    print("Data retrieval from Google Sheets completed.")
+    print("Data retrieval from Google Sheets completed.\n")
 
     return boulder_data, route_data, ascent_data
 
@@ -184,17 +184,17 @@ def main():
     if choice == 'scrape':
         scrape_data()
         boulder_data, route_data, ascent_data = retrieve_data()
-        print("Boulder Data:\n", boulder_data)
-        print("Route Data:\n", route_data)
-        print("Ascent Data:\n", ascent_data)
+        print("\nBoulder Data:\n", boulder_data)
+        print("\nRoute Data:\n", route_data)
+        print("\nAscent Data:\n", ascent_data)
 
     # if user chooses to retrieve, then call retrieve_data function
     # and simply retrieve the existing data on google drive
     elif choice == 'retrieve':
         boulder_data, route_data, ascent_data = retrieve_data()
-        print("Boulder Data:\n", boulder_data)
-        print("Route Data:\n", route_data)
-        print("Ascent Data:\n", ascent_data)
+        print("\nBoulder Data:\n", boulder_data)
+        print("\nRoute Data:\n", route_data)
+        print("\nAscent Data:\n", ascent_data)
 
 
 if __name__ == "__main__":
