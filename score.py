@@ -85,6 +85,18 @@ class ScoreCalculator():
         def get_base_points(grade):
             return self.base_points_dict.get(grade, 0)
 
-        self.ascent_data['Base Points'] = self.ascent_data['Grade'].apply(
-            get_base_points)
-        return self.ascent_data
+        scoring_table = self.ascent_data
+
+        scoring_table = scoring_table['Base Points'] = \
+            scoring_table['Grade'].apply(get_base_points)
+
+        scoring_table = scoring_table.groupby('Climber Name')[
+            'Base Points'].sum().reset_index()
+
+        scoring_table.rename(
+            columns={'Base Points': 'Total Base Points'}, inplace=True)
+
+        scoring_table = scoring_table.sort_values(
+            by='Total Base Points', ascending=False).reset_index(drop=True)
+
+        return scoring_table
