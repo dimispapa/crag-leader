@@ -10,6 +10,7 @@ import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
 from scraper import Scraper, Crag
 from gsheets import GoogleSheetsClient
+from score_calculator import ScoreCalculator
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
@@ -208,6 +209,12 @@ def main():
         print("\nBoulder Data:\n", boulder_data)
         print("\nRoute Data:\n", route_data)
         print("\nAscent Data:\n", ascent_data)
+
+    # get scoring system parameters
+    score_calculator = ScoreCalculator(ascent_data)
+    base_points_dict, master_grade_bonus, vol_bonus_incr, vol_bonus_points, \
+        unique_asc_bonus = \
+        score_calculator.get_scoring_params(GSC, 'scoring_system')
 
 
 if __name__ == "__main__":
