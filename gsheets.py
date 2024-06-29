@@ -20,7 +20,7 @@ class GoogleSheetsClient:
         client (gspread.Client): Authorized gspread client.
     """
 
-    def __init__(self, creds_file, scope):
+    def __init__(self, creds_file: str, scope: list):
         """
         Initialize the GoogleSheetsClient with the given credentials file and
         scope.
