@@ -1,4 +1,5 @@
 from gspread import Client
+from pandas import DataFrame
 
 
 class ScoreCalculator():
@@ -7,19 +8,24 @@ class ScoreCalculator():
     the various scores and leaderboards from the ascent logs.
 
     Attributes:
-    ascent_data (list of dict): A list of ascent logs, where each log is
-                                represented as a dictionary.
+        ascent_data (pd.DataFrame): A DataFrame containing ascent logs.
+        gsc (gspread.Client): An authorized gspread client instance.
+        base_points_dict (dict): A dictionary mapping grades to base points.
+        master_grade_bonus (float): A bonus factor for master grades.
+        vol_bonus_incr (int): The increment value for volume bonuses.
+        vol_bonus_points (int): The points awarded per volume bonus increment.
+        unique_asc_bonus (float): A bonus factor for unique ascents.
     """
 
-    def __init__(self, gs_client: Client, ascent_data):
+    def __init__(self, gs_client: Client, ascent_data: DataFrame):
         """
         Initialize the ScoreCalculator class instance.
 
         Args:
             gs_client (gspread.Client): An authorized gspread client instance.
-            ascent_data (list of dict): A list of ascent logs.
+            ascent_data (pandas.DataFrame): A DataFrame containing ascent logs.
         """
-        self.ascent_data = ascent_data
+        self.scoring_table = ascent_data
         self.gsc = gs_client
         # get the scoring system parameters
         self.base_points_dict, self.master_grade_bonus, self.vol_bonus_incr, \
@@ -32,9 +38,8 @@ class ScoreCalculator():
         and reformat them for easier use.
 
         Args:
-            gs_client (gspread.Client): An authorized gspread client instance.
-            file_name (str): The name of the Google Sheets file containing
-                                the scoring system parameters.
+            file_name (str): The name of the Google Sheets file containing the
+                                scoring system parameters.
 
         Returns:
             tuple: A tuple containing the following elements:
@@ -81,22 +86,34 @@ class ScoreCalculator():
                 unique_asc_bonus)
 
     def calc_base_points(self):
+        """
+        Calculate the base points for each ascent and group by climber to sum
+        the total base points.
 
+        Returns:
+            pandas.DataFrame: A DataFrame with climbers and their total base
+                                points.
+        """
+        # define a mappping function to apply on the dataframe
         def get_base_points(grade):
             return self.base_points_dict.get(grade, 0)
 
-        scoring_table = self.ascent_data
+        # apply the mapping function to get the base points for each ascent
+        self.scoring_table['Base Points'] = self.scoring_table['Grade'].apply(
+            get_base_points)
 
-        scoring_table = scoring_table['Base Points'] = \
-            scoring_table['Grade'].apply(get_base_points)
+        # scoring_table = scoring_table.groupby('Climber Name')[
+        #     'Base Points'].sum().reset_index()
 
-        scoring_table = scoring_table.groupby('Climber Name')[
-            'Base Points'].sum().reset_index()
+        # scoring_table.rename(
+        #     columns={'Base Points': 'Total Base Points'}, inplace=True)
 
-        scoring_table.rename(
-            columns={'Base Points': 'Total Base Points'}, inplace=True)
+        # scoring_table = scoring_table.sort_values(
+        #     by='Total Base Points', ascending=False).reset_index(drop=True)
 
-        scoring_table = scoring_table.sort_values(
-            by='Total Base Points', ascending=False).reset_index(drop=True)
+        return self.scoring_table
 
-        return scoring_table
+    def calculate_scores(self):
+        self.calc_base_points()
+
+        return base_points
