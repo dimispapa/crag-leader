@@ -78,12 +78,12 @@ class ScoreCalculator():
 
     def calc_base_points(self):
         """
-        Calculate the base points for each ascent and group by climber to sum
-        the total base points.
+        Calculate the base points for each ascent and add it to the DataFrame.
+        If the ascent type is "flash", the base points are doubled.
 
         Returns:
-            pandas.DataFrame: A DataFrame with climbers and their total base
-                                points.
+            pandas.DataFrame: A DataFrame with the calculated base points for
+                                each ascent.
         """
         # define a mappping function to apply on the dataframe
         def get_base_points(row):
@@ -96,17 +96,18 @@ class ScoreCalculator():
         self.scoring_table['Base Points'] = self.scoring_table['Grade'].apply(
             get_base_points)
 
-        # scoring_table = scoring_table.groupby('Climber Name')[
-        #     'Base Points'].sum().reset_index()
-
-        # scoring_table.rename(
-        #     columns={'Base Points': 'Total Base Points'}, inplace=True)
-
-        # scoring_table = scoring_table.sort_values(
-        #     by='Total Base Points', ascending=False).reset_index(drop=True)
+        return self.scoring_table
 
     def calc_volume_bonus(self):
-        # group the scoring table by the climber and count occurences by group
+        """
+        Calculate the volume bonus for each climber based on the number of
+        ascents.
+
+        Returns:
+            pandas.DataFrame: A DataFrame with the volume bonus for each
+                                climber.
+        """
+        # group the scoring table by the climber and count numbers of ascents
         volume_bonus = self.scoring_table.groupby(
             'Climber Name').size().reset_index(name='Num Ascents')
         # calculate the volume bonus by getting the increments
@@ -124,6 +125,13 @@ class ScoreCalculator():
         # self.scoring_table['Volume Bonus'].fillna(0, inplace=True)
 
     def calc_unique_ascent(self):
+        """
+        Calculate the unique ascent bonus for each ascent if applicable.
+
+        Returns:
+            pandas.DataFrame: A DataFrame with the unique ascent bonus for
+                                ascent applied if applicable.
+        """
         # Group by route name and count the number of unique ascents
         ascent_counts = self.scoring_table.groupby(
             'Route Name').size().reset_index(name='Ascent Count')
@@ -141,6 +149,13 @@ class ScoreCalculator():
         )
 
     def calculate_scores(self):
+        """
+        Calculate all scores and bonuses for each climber.
+
+        Returns:
+            pandas.DataFrame: A DataFrame with the total score for each
+                                climber.
+        """
         self.calc_base_points()
         self.calc_volume_bonus()
         self.calc_unique_ascent()
