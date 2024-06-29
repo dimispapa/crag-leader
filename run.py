@@ -77,6 +77,7 @@ def compile_data(crag: Crag):
                 # Append ascent information to ascent_data list
                 ascent_data.append(
                     (route.name,
+                     route.grade,
                      boulder.name,
                      ascent['climber_name'],
                      ascent['ascent_type'],
@@ -96,6 +97,7 @@ def compile_data(crag: Crag):
     ascent_data = pd.DataFrame(
         ascent_data,
         columns=["Route Name",
+                 "Grade",
                  "Boulder Name",
                  "Climber Name",
                  "Ascent Type",
@@ -213,6 +215,7 @@ def main():
     # initialize the score calculator class
     score_calculator = ScoreCalculator(GSC, ascent_data)
     result_df = score_calculator.calc_base_points()
+    print(result_df)
 
 
 if __name__ == "__main__":
