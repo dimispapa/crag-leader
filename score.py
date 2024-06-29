@@ -129,6 +129,23 @@ class ScoreCalculator():
         # # fill potential na values with zero to allow summation later
         # self.scoring_table['Volume Bonus'].fillna(0, inplace=True)
 
+    def calc_unique_ascent(self):
+        # Group by route name and count the number of unique ascents
+        ascent_counts = self.scoring_table.groupby(
+            'Route Name').size().reset_index(name='Ascent Count')
+
+        # Merge the ascent counts with the scoring table
+        self.scoring_table = self.scoring_table.merge(
+            ascent_counts, on='Route Name', how='left')
+
+        # Calculate the unique ascent bonus
+        self.scoring_table['Unique Ascent Bonus'] = self.scoring_table.apply(
+            lambda row: row['Base Points'] +
+            (row['Base Points'] * self.unique_asc_bonus)
+            if row['Ascent Count'] == 1 else 0,
+            axis=1
+        )
+
     def calculate_scores(self):
         self.calc_base_points()
         self.calc_volume_bonus()
