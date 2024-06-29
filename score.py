@@ -11,16 +11,22 @@ class ScoreCalculator():
                                 represented as a dictionary.
     """
 
-    def __init__(self, ascent_data):
+    def __init__(self, gs_client: Client, ascent_data):
         """
         Initialize the ScoreCalculator class instance.
 
         Args:
+            gs_client (gspread.Client): An authorized gspread client instance.
             ascent_data (list of dict): A list of ascent logs.
         """
         self.ascent_data = ascent_data
+        self.gsc = gs_client
+        # get the scoring system parameters
+        self.base_points_dict, self.master_grade_bonus, self.vol_bonus_incr, \
+            self.vol_bonus_points, self.unique_asc_bonus = \
+            self.get_scoring_params('scoring_system')
 
-    def get_scoring_params(self, gs_client: Client, file_name: str):
+    def get_scoring_params(self, file_name: str):
         """
         Retrieve scoring system parameters from Google Sheets
         and reformat them for easier use.
@@ -43,14 +49,14 @@ class ScoreCalculator():
                 - unique_asc_bonus (float): A bonus factor for unique ascents.
         """
         # get scoring system parameters
-        base_points_data = gs_client.get_sheet_data(file_name,
-                                                    'base_points')
-        master_grade_data = gs_client.get_sheet_data(file_name,
-                                                     'master_grade_bonus')
-        volume_bonus_data = gs_client.get_sheet_data(file_name,
-                                                     'volume_bonus')
-        unique_ascent_data = gs_client.get_sheet_data(file_name,
-                                                      'unique_ascent_bonus')
+        base_points_data = self.gsc.get_sheet_data(file_name,
+                                                   'base_points')
+        master_grade_data = self.gsc.get_sheet_data(file_name,
+                                                    'master_grade_bonus')
+        volume_bonus_data = self.gsc.get_sheet_data(file_name,
+                                                    'volume_bonus')
+        unique_ascent_data = self.gsc.get_sheet_data(file_name,
+                                                     'unique_ascent_bonus')
 
         # reformat scoring system params into variables for easier use
         base_points_dict = {str(row['Grade']): int(row['Points'])
@@ -73,3 +79,12 @@ class ScoreCalculator():
                 vol_bonus_incr,
                 vol_bonus_points,
                 unique_asc_bonus)
+
+    def calc_base_points(self):
+
+        def get_base_points(grade):
+            return self.base_points_dict.get(grade, 0)
+
+        self.ascent_data['Base Points'] = self.ascent_data['Grade'].apply(
+            get_base_points)
+        return self.ascent_data
