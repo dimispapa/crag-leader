@@ -133,3 +133,6 @@ class ScoreCalculator():
 
     def calculate_scores(self):
         self.calc_base_points()
+        self.calc_volume_bonus()
+
+        return self.scoring_table
