@@ -10,7 +10,7 @@ import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
 from scraper import Scraper, Crag
 from gsheets import GoogleSheetsClient
-from score_calculator import ScoreCalculator
+from score import ScoreCalculator
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
