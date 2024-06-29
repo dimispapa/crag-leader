@@ -1,9 +1,47 @@
+from gspread import Client
+
+
 class ScoreCalculator():
+    """
+    A class module containing methods for the purpose of calculating
+    the various scores and leaderboards from the ascent logs.
+
+    Attributes:
+    ascent_data (list of dict): A list of ascent logs, where each log is
+                                represented as a dictionary.
+    """
 
     def __init__(self, ascent_data):
+        """
+        Initialize the ScoreCalculator class instance.
+
+        Args:
+            ascent_data (list of dict): A list of ascent logs.
+        """
         self.ascent_data = ascent_data
 
-    def get_scoring_params(self, gs_client, file_name):
+    def get_scoring_params(self, gs_client: Client, file_name: str):
+        """
+        Retrieve scoring system parameters from Google Sheets
+        and reformat them for easier use.
+
+        Args:
+            gs_client (gspread.Client): An authorized gspread client instance.
+            file_name (str): The name of the Google Sheets file containing
+                                the scoring system parameters.
+
+        Returns:
+            tuple: A tuple containing the following elements:
+                - base_points_dict (dict): A dictionary mapping grades to base
+                                            points.
+                - master_grade_bonus (float): A bonus factor for
+                                                master grades.
+                - vol_bonus_incr (int): The increment value for
+                                        volume bonuses.
+                - vol_bonus_points (int): The points awarded per
+                                            volume bonus increment.
+                - unique_asc_bonus (float): A bonus factor for unique ascents.
+        """
         # get scoring system parameters
         base_points_data = gs_client.get_sheet_data(file_name,
                                                     'base_points')
