@@ -111,25 +111,23 @@ class ScoreCalculator():
         # scoring_table = scoring_table.sort_values(
         #     by='Total Base Points', ascending=False).reset_index(drop=True)
 
-        return self.scoring_table
-
     def calc_volume_bonus(self):
         # group the scoring table by the climber and count occurences by group
         volume_bonus = self.scoring_table.groupby(
-            'Climber Name').size().reset_index('Num Ascents')
+            'Climber Name').size().reset_index(name='Num Ascents')
         # calculate the volume bonus by getting the increments
         # through floor division and multiplying by the bonus points
         volume_bonus['Volume Bonus'] = \
             (volume_bonus['Num Ascents'] //
              self.vol_bonus_incr) * self.vol_bonus_points
-        # merge the volume bonus df on the scoring table
-        # via a left join
-        self.scoring_table = \
-            self.scoring_table.merge(
-                volume_bonus[['Climber Name', 'Volume Bonus']],
-                on='Climber Name', how='left')
-        # fill potential na values with zero to allow summation later
-        self.scoring_table['Volume Bonus'].fillna(0, inplace=True)
+        # # merge the volume bonus df on the scoring table
+        # # via a left join
+        # self.scoring_table = \
+        #     self.scoring_table.merge(
+        #         volume_bonus[['Climber Name', 'Volume Bonus']],
+        #         on='Climber Name', how='left')
+        # # fill potential na values with zero to allow summation later
+        # self.scoring_table['Volume Bonus'].fillna(0, inplace=True)
 
     def calculate_scores(self):
         self.calc_base_points()
