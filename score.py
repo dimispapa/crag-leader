@@ -11,7 +11,6 @@ class ScoreCalculator():
         ascent_data (pd.DataFrame): A DataFrame containing ascent logs.
         gsc (gspread.Client): An authorized gspread client instance.
         base_points_dict (dict): A dictionary mapping grades to base points.
-        master_grade_bonus (float): A bonus factor for master grades.
         vol_bonus_incr (int): The increment value for volume bonuses.
         vol_bonus_points (int): The points awarded per volume bonus increment.
         unique_asc_bonus (float): A bonus factor for unique ascents.
@@ -28,7 +27,7 @@ class ScoreCalculator():
         self.scoring_table = ascent_data
         self.gsc = gs_client
         # get the scoring system parameters
-        self.base_points_dict, self.master_grade_bonus, self.vol_bonus_incr, \
+        self.base_points_dict, self.vol_bonus_incr, \
             self.vol_bonus_points, self.unique_asc_bonus = \
             self.get_scoring_params('scoring_system')
 
@@ -45,8 +44,6 @@ class ScoreCalculator():
             tuple: A tuple containing the following elements:
                 - base_points_dict (dict): A dictionary mapping grades to base
                                             points.
-                - master_grade_bonus (float): A bonus factor for
-                                                master grades.
                 - vol_bonus_incr (int): The increment value for
                                         volume bonuses.
                 - vol_bonus_points (int): The points awarded per
@@ -56,8 +53,6 @@ class ScoreCalculator():
         # get scoring system parameters
         base_points_data = self.gsc.get_sheet_data(file_name,
                                                    'base_points')
-        master_grade_data = self.gsc.get_sheet_data(file_name,
-                                                    'master_grade_bonus')
         volume_bonus_data = self.gsc.get_sheet_data(file_name,
                                                     'volume_bonus')
         unique_ascent_data = self.gsc.get_sheet_data(file_name,
@@ -66,9 +61,6 @@ class ScoreCalculator():
         # reformat scoring system params into variables for easier use
         base_points_dict = {str(row['Grade']): int(row['Points'])
                             for row in base_points_data}
-
-        master_grade_bonus = float(
-            master_grade_data[0].get('Bonus_factor'))
 
         vol_bonus_incr = int(
             volume_bonus_data[0].get('Bonus_increment'))
@@ -80,7 +72,6 @@ class ScoreCalculator():
             unique_ascent_data[0].get('Bonus_factor'))
 
         return (base_points_dict,
-                master_grade_bonus,
                 vol_bonus_incr,
                 vol_bonus_points,
                 unique_asc_bonus)
@@ -95,8 +86,11 @@ class ScoreCalculator():
                                 points.
         """
         # define a mappping function to apply on the dataframe
-        def get_base_points(grade):
-            return self.base_points_dict.get(grade, 0)
+        def get_base_points(row):
+            base_points = self.base_points_dict.get(row['Grade'], 0)
+            if row['Ascent Type'] == 'flash':
+                base_points *= 2
+            return base_points
 
         # apply the mapping function to get the base points for each ascent
         self.scoring_table['Base Points'] = self.scoring_table['Grade'].apply(
@@ -149,5 +143,6 @@ class ScoreCalculator():
     def calculate_scores(self):
         self.calc_base_points()
         self.calc_volume_bonus()
+        self.calc_unique_ascent()
 
         return self.scoring_table
