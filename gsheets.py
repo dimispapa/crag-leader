@@ -6,6 +6,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 from pandas import DataFrame
+from datetime import datetime
 
 
 class GoogleSheetsClient:
@@ -46,26 +47,6 @@ class GoogleSheetsClient:
         scoped_creds = creds.with_scopes(self.scope)
         return gspread.authorize(scoped_creds)
 
-    def get_or_create_gsheet(self, gsheet_name: str):
-        """
-        Open a Google Sheet by its name or create if not exists.
-
-        Args:
-            gsheet_name (str): The name of the Google Sheet to open.
-
-        Returns:
-            gspread.Spreadsheet: The opened/created Google Sheet.
-        """
-        try:
-            gsheet = self.client.open(gsheet_name)
-
-        except gspread.SpreadsheetNotFound:
-            return print(f'Error: The Google Sheet "{gsheet_name}" '
-                         'does not exist, please create a Google sheet file'
-                         f' with the name "{gsheet_name}" and then choose '
-                         'to "scrape".\n')
-        return gsheet
-
     def get_sheet_data(self, gsheet_name: str, worksheet_name: str):
         """
         Retrieve all values from a specific worksheet in a Google Sheet.
@@ -97,7 +78,7 @@ class GoogleSheetsClient:
         """
 
         # first open or create the gsheet
-        gsheet = self.get_or_create_gsheet(gsheet_name)
+        gsheet = self.client.open(gsheet_name)
         # access the worksheet or create if not exists
         try:
             worksheet = gsheet.worksheet(worksheet_name)
@@ -110,3 +91,28 @@ class GoogleSheetsClient:
         worksheet.clear()
         # write the dataframe to the worksheet
         set_with_dataframe(worksheet, dataframe)
+
+    def update_timestamp(self, gsheet_name: str):
+        """
+        Updates the google sheet with the latest datetime object converted
+        to a timestamp string.
+
+        Arg:
+            gsheet_name (str): The name of the google sheet to update.
+        """
+        gsheet = self.client.open(gsheet_name)
+        datetime_str = datetime.now().strftime("%b %d %Y %r")
+        gsheet.worksheet('last_updated').update_acell('A1', datetime_str)
+
+    def get_timestamp(self, gsheet_name: str):
+        """
+        Gets the datetime last updated of a chosen google sheet.
+
+        Arg:
+            gsheet_name (str): The name of the google sheet to update.
+
+        Returns:
+            str: The last updated timestamp as a string.
+        """
+        gsheet = self.client.open(gsheet_name)
+        return gsheet.worksheet('last_updated').acell('A1').value
