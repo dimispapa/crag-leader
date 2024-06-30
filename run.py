@@ -126,6 +126,7 @@ def scrape_data():
     GSC.write_data_to_sheet('data', 'boulders', boulder_data)
     GSC.write_data_to_sheet('data', 'routes', route_data)
     GSC.write_data_to_sheet('data', 'ascents', ascent_data)
+    GSC.update_timestamp('data')
     print("Finished writing data to google sheets ...\n")
 
 
@@ -172,17 +173,21 @@ def get_user_choice():
         str: The user's choice ('scrape' or 'retrieve').
     """
     while True:
+        # get the latest timestamp from google sheet file
+        timestamp = GSC.get_timestamp('data')
         # prompt user choice.
         # Case-insesitive and remove leading/trailing spaces
         choice = input(
+            f"Crag data has been last updated on: {timestamp}.\n"
             "Do you want to scrape the latest data from 27crags or retrieve"
-            " existing data? \n(scrape/retrieve): \n\n"
+            " existing data? \n(Please type 'scrape' or 'retrieve'): \n\n"
         ).strip().lower()
 
         # validate user choice
         if choice in ['scrape', 'retrieve']:
             return choice
-        print("\nInvalid choice. Please enter 'scrape' or 'retrieve'.\n")
+        print(f"\nInvalid choice. You've entered {choice}. \n"
+              "Please enter 'scrape' or 'retrieve'.\n")
 
 
 def main():
@@ -191,7 +196,6 @@ def main():
     controlling the workflow and executing the imported
     methods and functions as required.
     """
-
     # Get user choice
     choice = get_user_choice()
 
