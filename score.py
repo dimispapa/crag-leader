@@ -93,8 +93,8 @@ class ScoreCalculator():
             return base_points
 
         # apply the mapping function to get the base points for each ascent
-        self.scoring_table['Base Points'] = self.scoring_table['Grade'].apply(
-            get_base_points)
+        self.scoring_table['Base Points'] = self.scoring_table.apply(
+            get_base_points, axis=1)
 
         return self.scoring_table
 
@@ -115,14 +115,15 @@ class ScoreCalculator():
         volume_bonus['Volume Bonus'] = \
             (volume_bonus['Num Ascents'] //
              self.vol_bonus_incr) * self.vol_bonus_points
-        # # merge the volume bonus df on the scoring table
-        # # via a left join
-        # self.scoring_table = \
-        #     self.scoring_table.merge(
-        #         volume_bonus[['Climber Name', 'Volume Bonus']],
-        #         on='Climber Name', how='left')
-        # # fill potential na values with zero to allow summation later
-        # self.scoring_table['Volume Bonus'].fillna(0, inplace=True)
+        # merge the volume bonus df on the scoring table
+        # via a left join
+        self.scoring_table = \
+            self.scoring_table.merge(
+                volume_bonus[['Climber Name', 'Volume Bonus']],
+                on='Climber Name', how='left')
+        # fill potential na values with zero to allow summation later
+        self.scoring_table['Volume Bonus'] = \
+            self.scoring_table['Volume Bonus'].fillna(0)
 
     def calc_unique_ascent(self):
         """
@@ -148,6 +149,23 @@ class ScoreCalculator():
             axis=1
         )
 
+    def aggregate_scores(self):
+        """
+
+        """
+
+        aggregate_table = self.scoring_table.groupby('Climber Name').agg({
+            'Base Points': 'sum',
+            'Volume Bonus': 'max',
+            'Unique Ascent Bonus': 'sum'
+        })
+
+        aggregate_table['Total Score'] = aggregate_table['Base Points'] + \
+            aggregate_table['Volume Bonus'] + \
+            aggregate_table['Unique Ascent Bonus']
+
+        return aggregate_table
+
     def calculate_scores(self):
         """
         Calculate all scores and bonuses for each climber.
@@ -159,5 +177,6 @@ class ScoreCalculator():
         self.calc_base_points()
         self.calc_volume_bonus()
         self.calc_unique_ascent()
+        aggregate_table = self.aggregate_scores()
 
-        return self.scoring_table
+        return aggregate_table

@@ -214,8 +214,8 @@ def main():
 
     # initialize the score calculator class
     score_calculator = ScoreCalculator(GSC, ascent_data)
-    scoring_table = score_calculator.calculate_scores()
-    print(scoring_table)
+    leaderboard = score_calculator.calculate_scores()
+    print(leaderboard)
 
 
 if __name__ == "__main__":
