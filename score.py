@@ -151,7 +151,11 @@ class ScoreCalculator():
 
     def aggregate_scores(self):
         """
+        Aggregates the scoring columns by Climber Name, summing the
+        Base Points and Unique Ascent while getting the max of Volume Bonus.
 
+        Returns:
+            pandas.DataFrame: The aggregated scoring table.
         """
 
         aggregate_table = self.scoring_table.groupby('Climber Name').agg({
