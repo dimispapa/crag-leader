@@ -192,7 +192,7 @@ def get_user_choice():
         ).strip().lower()
 
         # validate user choice
-        if (choice) in [1, 2, '1', '2']:
+        if choice in [1, 2, '1', '2']:
             clear()
             return choice
         print(f"\nInvalid choice. You've entered {choice}. \n"
