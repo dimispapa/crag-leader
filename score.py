@@ -6,6 +6,27 @@ from gspread import Client
 from pandas import DataFrame
 
 
+def rank_leaderboard(leaderboard: DataFrame, ranking_column: str):
+    """
+    Sort and rank the leaderboard based on the selected column.
+
+    Args:
+        leaderboard (pandas.DataFrame): The leaderboard to be ranked.
+        ranking_column (str): The column name to rank it by.
+
+    Returns:
+        pandas.DataFrame: The sorted and ranked leaderboard.
+    """
+    # sort and rank the leaderboard before printing to the terminal
+    ranked_leaderboard = leaderboard.sort_values(
+        ranking_column, ascending=False)
+    ranked_leaderboard['Rank'] = \
+        ranked_leaderboard[ranking_column].rank(
+            method='min', ascending=False).astype(int)
+
+    return ranked_leaderboard
+
+
 class ScoreCalculator():
     """
     A class module containing methods for the purpose of calculating
@@ -34,6 +55,7 @@ class ScoreCalculator():
         self.base_points_dict, self.vol_bonus_incr, \
             self.vol_bonus_points, self.unique_asc_bonus = \
             self.get_scoring_params('scoring_system')
+        self.aggregate_table = DataFrame()
 
     def get_scoring_params(self, file_name: str):
         """
@@ -116,18 +138,18 @@ class ScoreCalculator():
             'Climber Name').size().reset_index(name='Num Ascents')
         # calculate the volume bonus by getting the increments
         # through floor division and multiplying by the bonus points
-        volume_bonus['Volume Bonus'] = \
+        volume_bonus['Volume Score'] = \
             (volume_bonus['Num Ascents'] //
              self.vol_bonus_incr) * self.vol_bonus_points
         # merge the volume bonus df on the scoring table
         # via a left join
         self.scoring_table = \
             self.scoring_table.merge(
-                volume_bonus[['Climber Name', 'Volume Bonus']],
+                volume_bonus[['Climber Name', 'Volume Score']],
                 on='Climber Name', how='left')
         # fill potential na values with zero to allow summation later
-        self.scoring_table['Volume Bonus'] = \
-            self.scoring_table['Volume Bonus'].fillna(0).astype(int)
+        self.scoring_table['Volume Score'] = \
+            self.scoring_table['Volume Score'].fillna(0).astype(int)
 
     def calc_unique_ascent(self):
         """
@@ -146,7 +168,7 @@ class ScoreCalculator():
             ascent_counts, on='Route Name', how='left')
 
         # Calculate the unique ascent bonus
-        self.scoring_table['Unique Ascent Bonus'] = self.scoring_table.apply(
+        self.scoring_table['Unique Ascent Score'] = self.scoring_table.apply(
             lambda row: row['Base Points'] +
             (row['Base Points'] * self.unique_asc_bonus)
             if row['Ascent Count'] == 1 else 0,
@@ -161,18 +183,19 @@ class ScoreCalculator():
         Returns:
             pandas.DataFrame: The aggregated scoring table.
         """
-
-        aggregate_table = self.scoring_table.groupby('Climber Name').agg({
+        # group by climber and aggregate the scoring columns
+        self.aggregate_table = self.scoring_table.groupby('Climber Name').agg({
             'Base Points': 'sum',
             'Volume Bonus': 'max',
             'Unique Ascent Bonus': 'sum'
         })
+        # get the total tally based on the various scoring components
+        self.aggregate_table['Total Score'] = \
+            self.aggregate_table['Base Points'] + \
+            self.aggregate_table['Volume Score'] + \
+            self.aggregate_table['Unique Ascent Score']
 
-        aggregate_table['Total Score'] = aggregate_table['Base Points'] + \
-            aggregate_table['Volume Bonus'] + \
-            aggregate_table['Unique Ascent Bonus']
-
-        return aggregate_table
+        return self.aggregate_table
 
     def calculate_scores(self):
         """
