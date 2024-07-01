@@ -187,11 +187,12 @@ def get_user_choice():
         choice = input(
             f"Crag data has been last updated on: {timestamp}.\n"
             "Do you want to scrape the latest data from 27crags or retrieve"
-            " existing data? \n(Please type 'scrape' or 'retrieve'): \n\n"
+            " existing data? \n"
+            "(Please type 1 for 'scrape' or 2 for 'retrieve'.): \n\n"
         ).strip().lower()
 
         # validate user choice
-        if int(choice) in [1, 2]:
+        if (choice) in [1, 2, '1', '2']:
             clear()
             return choice
         print(f"\nInvalid choice. You've entered {choice}. \n"
