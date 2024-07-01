@@ -196,7 +196,7 @@ def get_user_choice():
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
             "(Please type 1 for 'scraping latest data' or "
-            "2 for 'retrieving current stored data'.): \n\n"
+            "2 for 'retrieving current stored data'.): "
         ).strip().lower()
 
         # check if entry is empty (or spaces):
@@ -204,14 +204,14 @@ def get_user_choice():
             clear()
             print("\n Invalid choice. You did not enter a value.\n"
                   "(Please enter 1 for 'scraping latest data' or "
-                  "2 for 'retrieving current stored data'.): \n\n")
+                  "2 for 'retrieving current stored data'.): \n")
 
         # validate user choice
         elif choice not in ['1', '2']:
             clear()
             print(f"\nInvalid choice. You've entered '{choice}'. \n"
                   "(Please enter 1 for 'scraping latest data' or "
-                  "2 for 'retrieving current stored data'.): \n\n")
+                  "2 for 'retrieving current stored data'.): \n")
         else:
             return 'scrape' if choice == '1' else 'retrieve'
 
@@ -231,7 +231,7 @@ def main():
 
     # welcome message
     print("Welcome to the CRAG LEADER application. A leaderboard designed for"
-          "boulderers logging their ascents on 27crags!\n")
+          " boulderers logging their ascents on 27crags!\n")
     # Get user choice
     choice = get_user_choice()
 
