@@ -197,6 +197,76 @@ class ScoreCalculator():
 
         return self.aggregate_table
 
+    def leaderboard_mode(self):
+        """
+        Present the user with different leaderboard options and display the
+        selected leaderboard.
+        """
+        while True:
+            # Present the options to the user
+            print("Please choose a leaderboard to view:")
+            print("1 - Total Score leaderboard")
+            print("2 - Volume leaderboard")
+            print("3 - Unique Ascents leaderboard")
+            print("4 - Master Grade leaderboard")
+            print("5 - Exit")
+
+            choice = input("Enter your choice (1-5): ").strip()
+
+            if choice == '1':
+                # Total Score leaderboard
+                total_score_leaderboard = rank_leaderboard(
+                    self.aggregate_table, 'Total Score')
+                print("Total Score Leaderboard:")
+                print(total_score_leaderboard)
+
+            elif choice == '2':
+                # Volume leaderboard
+                volume_leaderboard = rank_leaderboard(
+                    self.aggregate_table[['Climber Name', 'Volume Score']],
+                    'Volume Score')
+                print("Volume Leaderboard:")
+                print(volume_leaderboard)
+
+            elif choice == '3':
+                # Unique ascent leaderboard
+                unique_ascent_leaderboard = rank_leaderboard(
+                    self.aggregate_table[['Climber Name',
+                                          'Unique Ascent Score']],
+                    'Volume Score')
+                print("Unique Ascents Leaderboard:")
+                print(unique_ascent_leaderboard)
+
+            elif choice == '4':
+                # Grade leaderboard
+                # ask user to input a grade
+                grade = input(
+                    "Enter the grade (e.g., 3, 6A, 9A): ").strip().upper()
+                # filter the scoring table based on that grade
+                grade_leaderboard = \
+                    self.scoring_table[self.scoring_table['Grade'] == grade]
+                # group by the climber and count the ascents per that grade
+                grade_leaderboard = grade_leaderboard.groupby(
+                    'Climber Name').size().reset_index(
+                        name=f'Num of {grade} Ascents')
+                # sort and rank the leaderboard
+                grade_leaderboard = rank_leaderboard(
+                    grade_leaderboard[['Climber Name',
+                                      f'Num of {grade} Ascents']],
+                    f'Num of {grade} Ascents'
+                )
+                # print the leaderborad to the terminal
+                print(f"Master Grade Leaderboard for {grade}:")
+                print(grade_leaderboard)
+
+            elif choice == '5':
+                # Exit the loop
+                print("Exiting the leaderboard menu.")
+                break
+
+            else:
+                print("Invalid choice. Please enter a number between 1 and 5.")
+
     def calculate_scores(self):
         """
         Calculate all scores and bonuses for each climber.
