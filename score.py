@@ -1,3 +1,7 @@
+"""
+A module containg classes and method used for calculating the scores, bonuses,
+based on the ascent log and aggregating the scores in a leaderboard.
+"""
 from gspread import Client
 from pandas import DataFrame
 
