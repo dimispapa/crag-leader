@@ -221,8 +221,8 @@ def main():
     leaderboard = score_calculator.calculate_scores()
     # sort and rank the leaderboard before printing to the terminal
     ranked_leaderboard = leaderboard.sort_values('Total Score')
-    ranked_leaderboard['Rank'] = ranked_leaderboard.rank(
-        'Total Score', method='min').astype(int)
+    ranked_leaderboard['Rank'] = \
+        ranked_leaderboard['Total Score'].rank(method='min').astype(int)
     print(leaderboard)
 
 
