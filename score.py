@@ -3,7 +3,7 @@ A module containg classes and method used for calculating the scores, bonuses,
 based on the ascent log and aggregating the scores in a leaderboard.
 """
 from gspread import Client
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from clear import clear
 
 
@@ -18,12 +18,20 @@ def rank_leaderboard(leaderboard: DataFrame, ranking_column: str):
     Returns:
         pandas.DataFrame: The sorted and ranked leaderboard.
     """
-    # sort and rank the leaderboard before printing to the terminal
-    ranked_leaderboard = leaderboard.sort_values(
-        ranking_column, ascending=False)
-    ranked_leaderboard['Rank'] = \
-        ranked_leaderboard[ranking_column].rank(
-            method='min', ascending=False).astype(int)
+    # apply rank() method to the leaderboard
+    # if it's a dataframe
+    if isinstance(leaderboard, DataFrame):
+        leaderboard['Rank'] = \
+            leaderboard[ranking_column].rank(
+                method='min', ascending=False).astype(int)
+    # if it's a series
+    elif isinstance(leaderboard, Series):
+        # Create a DataFrame from the Series
+        leaderboard = leaderboard.to_frame()
+        leaderboard['Rank'] = \
+            leaderboard.rank(method='min', ascending=False).astype(int)
+    # sort the leaderboard by rank
+    ranked_leaderboard = leaderboard.sort_values(by='Rank')
 
     return ranked_leaderboard
 
@@ -204,6 +212,10 @@ class ScoreCalculator():
         Present the user with different leaderboard options and display the
         selected leaderboard.
         """
+        # parse aggregate table in variable for readability
+        agg_table = self.aggregate_table
+
+        # keep looping until user decides to exit
         while True:
             # Present the options to the user
             print("\nPlease choose a leaderboard to view:")
@@ -219,70 +231,83 @@ class ScoreCalculator():
                 # Total Score leaderboard
                 clear()
                 total_score_leaderboard = rank_leaderboard(
-                    self.aggregate_table, 'Total Score')
+                    agg_table, 'Total Score')
                 print("\nTotal Score Leaderboard:\n")
                 print(total_score_leaderboard)
 
+            # Volume leaderboard
             elif choice == '2':
-                # Volume leaderboard
+                # clear the terminal
                 clear()
+                # slice df for relevant cols
+                sliced_table = agg_table['Volume Score']
+                # rank the leaderboard
                 volume_leaderboard = rank_leaderboard(
-                    self.aggregate_table[['Climber Name', 'Volume Score']],
+                    sliced_table,
                     'Volume Score')
+                # print leaderboard to terminal
                 print("\nVolume Leaderboard:\n")
                 print(volume_leaderboard)
 
+            # Unique ascent leaderboard
             elif choice == '3':
-                # Unique ascent leaderboard
+                # clear the terminal
                 clear()
+                # slice df for relevant cols
+                sliced_table = agg_table['Unique Ascent Score']
+                # rank the leaderboard
                 unique_ascent_leaderboard = rank_leaderboard(
-                    self.aggregate_table[['Climber Name',
-                                          'Unique Ascent Score']],
+                    sliced_table,
                     'Volume Score')
+                # print leaderboard to terminal
                 print("\nUnique Ascents Leaderboard:\n")
                 print(unique_ascent_leaderboard)
 
+            # Grade leaderboard
             elif choice == '4':
-                # Grade leaderboard
+                # clear the terminal
                 clear()
                 # ask user to input a grade
                 grade = input(
                     "Enter the grade (e.g., 3, 6A, 9A): ").strip().upper()
                 # filter the scoring table based on that grade
                 grade_leaderboard = \
-                    self.scoring_table[self.scoring_table['Grade'] == grade]
+                    self.scoring_table.loc[
+                        self.scoring_table['Grade'] == grade]
                 # group by the climber and count the ascents per that grade
                 grade_leaderboard = grade_leaderboard.groupby(
                     'Climber Name').size().reset_index(
-                        name=f'Num of {grade} Ascents')
+                        name=f'Num of {grade} Ascents'
+                ).set_index('Climber Name')
                 # sort and rank the leaderboard
                 grade_leaderboard = rank_leaderboard(
-                    grade_leaderboard[['Climber Name',
-                                      f'Num of {grade} Ascents']],
+                    grade_leaderboard[f'Num of {grade} Ascents'],
                     f'Num of {grade} Ascents'
                 )
                 # print the leaderborad to the terminal
                 print(f"\nMaster Grade Leaderboard for {grade}:\n")
                 print(grade_leaderboard)
 
+            # Exit the loop
             elif choice == '5':
                 clear()
-                # Exit the loop
+
                 print("\nExiting the leaderboard menu ...\n")
                 break
 
+            # Invalidate choice
             else:
                 clear()
                 print(f"\nInvalid choice. You've entered '{choice}'."
-                      "Please enter a number between 1 and 5.\n")
+                      " Please enter a number between 1 and 5.\n")
 
     def calculate_scores(self):
         """
         Calculate all scores and bonuses for each climber.
 
         Returns:
-            pandas.DataFrame: A DataFrame with the total score for each
-                                climber.
+            pandas.DataFrame: An aggregate DataFrame with the scores
+                                for each climber.
         """
         self.calc_base_points()
         self.calc_volume_bonus()
