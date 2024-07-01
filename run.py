@@ -181,22 +181,39 @@ def get_user_choice():
     """
     while True:
         # get the latest timestamp from google sheet file
-        timestamp = GSC.get_timestamp('data')
+        # and handle value error to process a new scrape
+        try:
+            timestamp = GSC.get_timestamp('data')
+        except ValueError as ve:
+            print(f"Error retrieving timestamp: {ve}\n"
+                  "Processing a new scrape as default option ...\n")
+            return '1'
+
         # prompt user choice.
         # Case-insesitive and remove leading/trailing spaces
         choice = input(
             f"Crag data has been last updated on: {timestamp}.\n"
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
-            "(Please type 1 for 'scrape' or 2 for 'retrieve'.): \n\n"
+            "(Please type 1 for 'scraping latest data' or "
+            "2 for 'retrieving current stored data'.): \n\n"
         ).strip().lower()
 
-        # validate user choice
-        if choice in [1, 2, '1', '2']:
+        # check if entry is empty (or spaces):
+        if not choice:
             clear()
-            return choice
-        print(f"\nInvalid choice. You've entered {choice}. \n"
-              "Please enter 1 for 'scrape' or 2 for 'retrieve'.\n")
+            print("\n Invalid choice. You did not enter a value."
+                  "(Please enter 1 for 'scraping latest data' or "
+                  "2 for 'retrieving current stored data'.): \n\n")
+
+        # validate user choice
+        if choice not in ['1', '2']:
+            clear()
+            print(f"\nInvalid choice. You've entered {choice}. \n"
+                  "(Please enter 1 for 'scraping latest data' or "
+                  "2 for 'retrieving current stored data'.): \n\n")
+        else:
+            return 'scrape' if choice == '1' else 'retrieve'
 
 
 def main():
