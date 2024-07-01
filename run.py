@@ -204,21 +204,24 @@ def main():
     if choice == 'scrape':
         scrape_data()
         boulder_data, route_data, ascent_data = retrieve_data()
-        print("\nBoulder Data:\n", boulder_data)
-        print("\nRoute Data:\n", route_data)
-        print("\nAscent Data:\n", ascent_data)
+        print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+              f"\n- {len(route_data)} Routes"
+              f"\n- {len(ascent_data)} Ascents\n")
 
     # if user chooses to retrieve, then call retrieve_data function
     # and simply retrieve the existing data on google drive
     elif choice == 'retrieve':
         boulder_data, route_data, ascent_data = retrieve_data()
-        print("\nBoulder Data:\n", boulder_data)
-        print("\nRoute Data:\n", route_data)
-        print("\nAscent Data:\n", ascent_data)
+        print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+              f"\n- {len(route_data)} Routes"
+              f"\n- {len(ascent_data)} Ascents\n")
 
-    # initialize the score calculator class
+    # initialize the score calculator class and calculate scores
     score_calculator = ScoreCalculator(GSC, ascent_data)
     leaderboard = score_calculator.calculate_scores()
+    # sort and rank the leaderboard before printing to the terminal
+    ranked_leaderboard = leaderboard.sort_values('Total Score')
+    ranked_leaderboard['Rank'] = ranked_leaderboard.rank().astype(int)
     print(leaderboard)
 
 
