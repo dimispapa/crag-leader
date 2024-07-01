@@ -4,6 +4,7 @@ based on the ascent log and aggregating the scores in a leaderboard.
 """
 from gspread import Client
 from pandas import DataFrame
+from clear import clear
 
 
 def rank_leaderboard(leaderboard: DataFrame, ranking_column: str):
@@ -55,6 +56,7 @@ class ScoreCalculator():
         self.base_points_dict, self.vol_bonus_incr, \
             self.vol_bonus_points, self.unique_asc_bonus = \
             self.get_scoring_params('scoring_system')
+        # init empty agg table df
         self.aggregate_table = DataFrame()
 
     def get_scoring_params(self, file_name: str):
@@ -186,8 +188,8 @@ class ScoreCalculator():
         # group by climber and aggregate the scoring columns
         self.aggregate_table = self.scoring_table.groupby('Climber Name').agg({
             'Base Points': 'sum',
-            'Volume Bonus': 'max',
-            'Unique Ascent Bonus': 'sum'
+            'Volume Score': 'max',
+            'Unique Ascent Score': 'sum'
         })
         # get the total tally based on the various scoring components
         self.aggregate_table['Total Score'] = \
@@ -204,7 +206,7 @@ class ScoreCalculator():
         """
         while True:
             # Present the options to the user
-            print("Please choose a leaderboard to view:")
+            print("\nPlease choose a leaderboard to view:")
             print("1 - Total Score leaderboard")
             print("2 - Volume leaderboard")
             print("3 - Unique Ascents leaderboard")
@@ -215,30 +217,34 @@ class ScoreCalculator():
 
             if choice == '1':
                 # Total Score leaderboard
+                clear()
                 total_score_leaderboard = rank_leaderboard(
                     self.aggregate_table, 'Total Score')
-                print("Total Score Leaderboard:")
+                print("\nTotal Score Leaderboard:\n")
                 print(total_score_leaderboard)
 
             elif choice == '2':
                 # Volume leaderboard
+                clear()
                 volume_leaderboard = rank_leaderboard(
                     self.aggregate_table[['Climber Name', 'Volume Score']],
                     'Volume Score')
-                print("Volume Leaderboard:")
+                print("\nVolume Leaderboard:\n")
                 print(volume_leaderboard)
 
             elif choice == '3':
                 # Unique ascent leaderboard
+                clear()
                 unique_ascent_leaderboard = rank_leaderboard(
                     self.aggregate_table[['Climber Name',
                                           'Unique Ascent Score']],
                     'Volume Score')
-                print("Unique Ascents Leaderboard:")
+                print("\nUnique Ascents Leaderboard:\n")
                 print(unique_ascent_leaderboard)
 
             elif choice == '4':
                 # Grade leaderboard
+                clear()
                 # ask user to input a grade
                 grade = input(
                     "Enter the grade (e.g., 3, 6A, 9A): ").strip().upper()
@@ -256,16 +262,19 @@ class ScoreCalculator():
                     f'Num of {grade} Ascents'
                 )
                 # print the leaderborad to the terminal
-                print(f"Master Grade Leaderboard for {grade}:")
+                print(f"\nMaster Grade Leaderboard for {grade}:\n")
                 print(grade_leaderboard)
 
             elif choice == '5':
+                clear()
                 # Exit the loop
-                print("Exiting the leaderboard menu.")
+                print("\nExiting the leaderboard menu ...\n")
                 break
 
             else:
-                print("Invalid choice. Please enter a number between 1 and 5.")
+                clear()
+                print(f"\nInvalid choice. You've entered '{choice}'."
+                      "Please enter a number between 1 and 5.\n")
 
     def calculate_scores(self):
         """
