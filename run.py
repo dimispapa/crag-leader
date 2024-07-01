@@ -187,7 +187,7 @@ def get_user_choice():
         except ValueError as ve:
             print(f"Error retrieving timestamp: {ve}\n"
                   "Processing a new scrape as default option ...\n")
-            return '1'
+            return 'scrape'
 
         # prompt user choice.
         # Case-insesitive and remove leading/trailing spaces
@@ -207,7 +207,7 @@ def get_user_choice():
                   "2 for 'retrieving current stored data'.): \n\n")
 
         # validate user choice
-        if choice not in ['1', '2']:
+        elif choice not in ['1', '2']:
             clear()
             print(f"\nInvalid choice. You've entered {choice}. \n"
                   "(Please enter 1 for 'scraping latest data' or "
