@@ -5,12 +5,13 @@ Imports the necessary classes/functions from the following modules:
 - gsheets.py
 - scraper.py
 """
-import os
+
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
 from scraper import Scraper, Crag
 from gsheets import GoogleSheetsClient
 from score import ScoreCalculator
+from clear import clear
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
@@ -159,16 +160,9 @@ def retrieve_data():
                      ' with name "data" and then choose '
                      'to "scrape".\n')
 
-    print("Data retrieval completed.\n")
+    print("\nData retrieval completed.\n")
 
     return boulder_data, route_data, ascent_data
-
-
-def clear():
-    """
-    Clear function to clean-up the terminal so things don't get messy.
-    """
-    os.system("cls" if os.name == "nt" else "clear")
 
 
 def get_user_choice():
