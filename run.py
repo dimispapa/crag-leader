@@ -202,14 +202,14 @@ def get_user_choice():
         # check if entry is empty (or spaces):
         if not choice:
             clear()
-            print("\n Invalid choice. You did not enter a value."
+            print("\n Invalid choice. You did not enter a value.\n"
                   "(Please enter 1 for 'scraping latest data' or "
                   "2 for 'retrieving current stored data'.): \n\n")
 
         # validate user choice
         elif choice not in ['1', '2']:
             clear()
-            print(f"\nInvalid choice. You've entered {choice}. \n"
+            print(f"\nInvalid choice. You've entered '{choice}'. \n"
                   "(Please enter 1 for 'scraping latest data' or "
                   "2 for 'retrieving current stored data'.): \n\n")
         else:
@@ -251,8 +251,12 @@ def main():
     ranked_leaderboard['Rank'] = \
         ranked_leaderboard['Total Score'].rank(
             method='min', ascending=False).astype(int)
-    # make sure all columns will be displayed and print to terminal
-    pd.set_option('display.max_columns', None)
+    # Ensure all columns are shown next to each other when printing
+    pd.set_option('display.max_columns', None)  # Show all columns
+    # Set a large enough width to avoid line wrapping
+    pd.set_option('display.width', 1000)
+    # Justify column headers to the left
+    pd.set_option('display.colheader_justify', 'left')
     print(ranked_leaderboard)
 
 
