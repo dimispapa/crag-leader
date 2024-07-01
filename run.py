@@ -220,9 +220,11 @@ def main():
     score_calculator = ScoreCalculator(GSC, ascent_data)
     leaderboard = score_calculator.calculate_scores()
     # sort and rank the leaderboard before printing to the terminal
-    ranked_leaderboard = leaderboard.sort_values('Total Score')
+    ranked_leaderboard = leaderboard.sort_values(
+        'Total Score', ascending=False)
     ranked_leaderboard['Rank'] = \
-        ranked_leaderboard['Total Score'].rank(method='min').astype(int)
+        ranked_leaderboard['Total Score'].rank(
+            method='min', ascending=False).astype(int)
     print(ranked_leaderboard)
 
 
