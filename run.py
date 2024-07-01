@@ -5,7 +5,7 @@ Imports the necessary classes/functions from the following modules:
 - gsheets.py
 - scraper.py
 """
-
+import os
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
 from scraper import Scraper, Crag
@@ -164,6 +164,13 @@ def retrieve_data():
     return boulder_data, route_data, ascent_data
 
 
+def clear():
+    """
+    Clear function to clean-up the terminal so things don't get messy.
+    """
+    os.system("cls" if os.name == "nt" else "clear")
+
+
 def get_user_choice():
     """
     Prompt the user to choose whether to scrape new data or retrieve existing
@@ -184,10 +191,11 @@ def get_user_choice():
         ).strip().lower()
 
         # validate user choice
-        if choice in ['scrape', 'retrieve']:
+        if int(choice) in [1, 2]:
+            clear()
             return choice
         print(f"\nInvalid choice. You've entered {choice}. \n"
-              "Please enter 'scrape' or 'retrieve'.\n")
+              "Please enter 1 for 'scrape' or 2 for 'retrieve'.\n")
 
 
 def main():
