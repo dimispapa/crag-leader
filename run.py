@@ -223,7 +223,7 @@ def main():
     ranked_leaderboard = leaderboard.sort_values('Total Score')
     ranked_leaderboard['Rank'] = \
         ranked_leaderboard['Total Score'].rank(method='min').astype(int)
-    print(leaderboard)
+    print(ranked_leaderboard)
 
 
 if __name__ == "__main__":
