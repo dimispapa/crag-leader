@@ -222,6 +222,16 @@ def main():
     controlling the workflow and executing the imported
     methods and functions as required.
     """
+    # Ensure all columns are shown next to each other when printing
+    pd.set_option('display.max_columns', None)  # Show all columns
+    # Set a large enough width to avoid line wrapping
+    pd.set_option('display.width', 1000)
+    # Justify column headers to the left
+    pd.set_option('display.colheader_justify', 'left')
+
+    # welcome message
+    print("Welcome to the CRAG LEADER application. A leaderboard designed for"
+          "boulderers logging their ascents on 27crags!\n")
     # Get user choice
     choice = get_user_choice()
 
@@ -244,20 +254,11 @@ def main():
 
     # initialize the score calculator class and calculate scores
     score_calculator = ScoreCalculator(GSC, ascent_data)
-    leaderboard = score_calculator.calculate_scores()
-    # sort and rank the leaderboard before printing to the terminal
-    ranked_leaderboard = leaderboard.sort_values(
-        'Total Score', ascending=False)
-    ranked_leaderboard['Rank'] = \
-        ranked_leaderboard['Total Score'].rank(
-            method='min', ascending=False).astype(int)
-    # Ensure all columns are shown next to each other when printing
-    pd.set_option('display.max_columns', None)  # Show all columns
-    # Set a large enough width to avoid line wrapping
-    pd.set_option('display.width', 1000)
-    # Justify column headers to the left
-    pd.set_option('display.colheader_justify', 'left')
-    print(ranked_leaderboard)
+    score_calculator.calculate_scores()
+
+    # prompt the user to choose the leaderboard
+    # before printing to the terminal
+    score_calculator.leaderboard_mode()
 
 
 if __name__ == "__main__":
