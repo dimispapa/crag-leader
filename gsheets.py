@@ -2,11 +2,11 @@
 Helper module to allow interaction with and writing/fetching data
 to/from Google Sheets on a Google Drive location.
 """
+from datetime import datetime
 import gspread
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 from pandas import DataFrame
-from datetime import datetime
 
 
 class GoogleSheetsClient:
