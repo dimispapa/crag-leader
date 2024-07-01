@@ -225,7 +225,7 @@ def main():
 
     # welcome message
     print("Welcome to the CRAG LEADER application. A leaderboard designed for"
-          " boulderers logging their ascents on 27crags!\n")
+          " boulderers who log their ascents on 27crags!\n")
     # Get user choice
     choice = get_user_choice()
 
@@ -247,6 +247,7 @@ def main():
               f"\n- {len(ascent_data)} Ascents\n")
 
     # initialize the score calculator class and calculate scores
+    print("\nCalculating scores ...\n")
     score_calculator = ScoreCalculator(GSC, ascent_data)
     score_calculator.calculate_scores()
 
