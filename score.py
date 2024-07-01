@@ -94,7 +94,7 @@ class ScoreCalculator():
 
         # apply the mapping function to get the base points for each ascent
         self.scoring_table['Base Points'] = self.scoring_table.apply(
-            get_base_points, axis=1)
+            get_base_points, axis=1).astype(int)
 
         return self.scoring_table
 
@@ -123,7 +123,7 @@ class ScoreCalculator():
                 on='Climber Name', how='left')
         # fill potential na values with zero to allow summation later
         self.scoring_table['Volume Bonus'] = \
-            self.scoring_table['Volume Bonus'].fillna(0)
+            self.scoring_table['Volume Bonus'].fillna(0).astype(int)
 
     def calc_unique_ascent(self):
         """
@@ -147,7 +147,7 @@ class ScoreCalculator():
             (row['Base Points'] * self.unique_asc_bonus)
             if row['Ascent Count'] == 1 else 0,
             axis=1
-        )
+        ).astype(int)
 
     def aggregate_scores(self):
         """
