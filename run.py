@@ -225,6 +225,8 @@ def main():
     ranked_leaderboard['Rank'] = \
         ranked_leaderboard['Total Score'].rank(
             method='min', ascending=False).astype(int)
+    # make sure all columns will be displayed and print to terminal
+    pd.set_option('display.max_columns', None)
     print(ranked_leaderboard)
 
 
