@@ -6,6 +6,7 @@ User is advised to import the 'Scraper' and 'Crag' classes in order in
 this order to pass the Scraper instance as an argument for the Crag
 instance.
 """
+import json
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -32,9 +33,9 @@ class Scraper:
         self.headers = headers
         self.session = requests.Session()
 
-    def get(self, url: str):
+    def get_html(self, url: str):
         """
-        Make an HTTP GET request to the specified URL.
+        Make an HTTP GET request to the HTMl from the specified URL.
 
         Args:
             url (str): The URL to make the request to.
@@ -44,6 +45,26 @@ class Scraper:
         """
         response = self.session.get(url, headers=self.headers)
         return BeautifulSoup(response.content, 'html5lib')
+
+    def get_json_html(self, url: str):
+        """
+        Make an HTTP GET request to the JSON file from the specified URL.
+        Extract the HTML from JSON to parse the content.
+
+        Args:
+            url (str): The URL to make the request to.
+
+        Returns:
+            BeautifulSoup: The parsed HTML content of the response.
+        """
+        response = self.session.get(url, headers=self.headers)
+        # load the json
+        additional_ascents_json = json.loads(
+            response.text)
+        # Convert the JSON content to HTML
+        additional_ascents_html = additional_ascents_json['ticks']
+        # return the parsed html content
+        return BeautifulSoup(additional_ascents_html, 'html5lib')
 
 
 class Crag:
@@ -90,7 +111,7 @@ class Crag:
         """
         # scrape parsed html content from url
         print(f'Scraping boulder list from "{self.routelist_url}" crag...\n')
-        soup = self.scraper.get(self.routelist_url)
+        soup = self.scraper.get_html(self.routelist_url)
 
         # locate anchor elements with "sector-item" class.
         # These contain the boulder pages, exclude the first one which is a
@@ -171,7 +192,7 @@ class Boulder:
         # scrape parsed html content from url
         print(f'Scraping list of routes from "{self.url}" for "{self.name}" '
               'boulder ...\n')
-        soup = self.scraper.get(self.url)
+        soup = self.scraper.get_html(self.url)
 
         # locate the tbody of the table element and the tr elements
         routes_table_tbody = soup.find('tbody')
@@ -203,7 +224,7 @@ class Boulder:
                 'div', attrs={'class': 'rating'}).text.strip()
 
             # construct the Route object and add it to the routes list
-            route = Route(route_name, route_url, grade,
+            route = Route(route_name, route_url, self.base_url, grade,
                           int(no_of_ascents), float(rating), self.scraper)
             routes.append(route)
 
@@ -217,6 +238,7 @@ class Route:
     Attributes:
         name (str): The name of the route.
         url (str): The URL of the route page.
+        base_url (str): The base URL of the website.
         grade (str): The grade of the route.
         ascents (int): The number of ascents.
         rating (float): The rating of the route.
@@ -226,14 +248,15 @@ class Route:
                             HTML parsing.
     """
 
-    def __init__(self, name: str, url: str, grade: str, ascents: int,
-                 rating: float, scraper: Scraper):
+    def __init__(self, name: str, url: str, base_url: str, grade: str,
+                 ascents: int, rating: float, scraper: Scraper):
         """
         Initialize Route class instance.
 
         Args:
             name (str): The name of the route.
             url (str): The URL of the route page.
+            base_url (str): The base URL of the website.
             grade (str): The grade of the route.
             ascents (int): The number of ascents.
             rating (float): The rating of the route.
@@ -244,6 +267,7 @@ class Route:
         """
         self.name = name
         self.url = url
+        self.base_url = base_url
         self.grade = grade
         self.ascents = ascents
         self.rating = rating
@@ -275,7 +299,7 @@ class Route:
         # Get the initial page and parse the HTML
         print(f'Scraping ascent log info from "{self.url}" for "{self.name}" '
               'route ...\n')
-        soup = self.scraper.get(self.url)
+        soup = self.scraper.get_html(self.url)
         ascent_log = self.extract_ascent_log(soup)
 
         # Check for the "More ascents" button
@@ -288,11 +312,13 @@ class Route:
             more_ascents_url = more_ascents_button.find('a')['href']
             if more_ascents_url:
                 # get full URL for scraper to access
-                full_more_ascents_url = self.url + more_ascents_url
+                full_more_ascents_url = self.base_url + more_ascents_url
                 # scrape additional ascents
                 print('Scraping additional ascents from '
                       f'"{full_more_ascents_url}" ...\n')
-                more_ascents_soup = self.scraper.get(full_more_ascents_url)
+                # fetch the url page with the printed json
+                more_ascents_soup = self.scraper.get_json_html(
+                    full_more_ascents_url)
                 # call method to extract the info from the parsed HTML
                 additional_ascent_log = self.extract_ascent_log(
                     more_ascents_soup)
