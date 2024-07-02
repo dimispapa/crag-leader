@@ -3,37 +3,8 @@ A module containg classes and method used for calculating the scores, bonuses,
 based on the ascent log and aggregating the scores in a leaderboard.
 """
 from gspread import Client
-from pandas import DataFrame, Series
-from clear import clear
-
-
-def rank_leaderboard(leaderboard: DataFrame, ranking_column: str):
-    """
-    Sort and rank the leaderboard based on the selected column.
-
-    Args:
-        leaderboard (pandas.DataFrame): The leaderboard to be ranked.
-        ranking_column (str): The column name to rank it by.
-
-    Returns:
-        pandas.DataFrame: The sorted and ranked leaderboard.
-    """
-    # apply rank() method to the leaderboard
-    # if it's a dataframe
-    if isinstance(leaderboard, DataFrame):
-        leaderboard['Rank'] = \
-            leaderboard[ranking_column].rank(
-                method='min', ascending=False).astype(int)
-    # if it's a series
-    elif isinstance(leaderboard, Series):
-        # Create a DataFrame from the Series
-        leaderboard = leaderboard.to_frame()
-        leaderboard['Rank'] = \
-            leaderboard.rank(method='min', ascending=False).astype(int)
-    # sort the leaderboard by rank
-    ranked_leaderboard = leaderboard.sort_values(by='Rank')
-
-    return ranked_leaderboard
+from pandas import DataFrame
+from helper import clear, rank_leaderboard
 
 
 class ScoreCalculator():
