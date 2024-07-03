@@ -14,3 +14,4 @@ requests-oauthlib==2.0.0
 rsa==4.9
 tzdata==2024.1
 beautifulsoup4==4.12.3
+rich==13.7.1
