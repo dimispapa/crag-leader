@@ -233,7 +233,7 @@ async def main():
     pd.set_option('display.colheader_justify', 'left')
 
     # welcome message
-    console.print("Welcome to the CRAG LEADER application. A leaderboard "
+    console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
                   "designed for boulderers who log their ascents on 27crags!"
                   "\n", style="bold cyan")
     # Get user choice

@@ -4,7 +4,9 @@ based on the ascent log and aggregating the scores in a leaderboard.
 """
 from gspread import Client
 from pandas import DataFrame
+from rich.prompt import Prompt
 from modules.helper import clear, rank_leaderboard
+from rich_utils import console, display_table
 
 
 class ScoreCalculator():
@@ -186,61 +188,50 @@ class ScoreCalculator():
         # parse aggregate table in variable for readability
         agg_table = self.aggregate_table
 
+        # Dictionary to map user choices to leaderboard columns and
+        # descriptions
+        leaderboard_options = {
+            '1': ('Total Score', 'Overall leaderboard - ranks climbers'
+                  'after summing up the Base Points based on grade (double '
+                  'points for flash), Volume Score and Unique Ascent Score.'),
+            '2': ('Volume Score', 'Volume leaderboard - ranks climbers based '
+                  'on number of ascents counting 25 points every 5 ascents.'),
+            '3': ('Unique Ascent Score', 'Unique Ascents leaderboard - ranks '
+                  'climbers by only counting unique ascents and awarding for'
+                  'double the normal base points for the grade.')
+        }
+
         # keep looping until user decides to exit
         while True:
             # Present the options to the user
-            print("\nPlease choose a leaderboard to view:")
-            print("1 - Total Score leaderboard")
-            print("2 - Volume leaderboard")
-            print("3 - Unique Ascents leaderboard")
-            print("4 - Master Grade leaderboard")
-            print("5 - Exit")
+            console.print("\nPlease choose a leaderboard to view:",
+                          style="bold cyan")
+            console.print("1 - Total Score leaderboard", style="bold cyan")
+            console.print("2 - Volume leaderboard", style="bold cyan")
+            console.print("3 - Unique Ascents leaderboard", style="bold cyan")
+            console.print("4 - Master Grade leaderboard", style="bold cyan")
+            console.print("5 - Exit", style="bold cyan")
 
-            choice = input("Enter your choice (1-5): ").strip()
+            choice = Prompt.ask("[bold cyan]Enter your choice (1-5)").strip()
 
-            if choice == '1':
-                # Total Score leaderboard
+            # if choice is 1, 2 or 3
+            if choice in leaderboard_options:
+                # Clear the terminal
                 clear()
-                total_score_leaderboard = rank_leaderboard(
-                    agg_table, 'Total Score')
-                print("\nTotal Score Leaderboard:\n")
-                print(total_score_leaderboard)
-
-            # Volume leaderboard
-            elif choice == '2':
-                # clear the terminal
-                clear()
-                # slice df for relevant cols
-                sliced_table = agg_table['Volume Score']
-                # rank the leaderboard
-                volume_leaderboard = rank_leaderboard(
-                    sliced_table,
-                    'Volume Score')
-                # print leaderboard to terminal
-                print("\nVolume Leaderboard:\n")
-                print(volume_leaderboard)
-
-            # Unique ascent leaderboard
-            elif choice == '3':
-                # clear the terminal
-                clear()
-                # slice df for relevant cols
-                sliced_table = agg_table['Unique Ascent Score']
-                # rank the leaderboard
-                unique_ascent_leaderboard = rank_leaderboard(
-                    sliced_table,
-                    'Volume Score')
-                # print leaderboard to terminal
-                print("\nUnique Ascents Leaderboard:\n")
-                print(unique_ascent_leaderboard)
+                # process the leaderboard
+                lead_option, description = leaderboard_options[choice]
+                leaderboard = rank_leaderboard(agg_table, lead_option)
+                # display the leaderboard
+                display_table(description, leaderboard)
 
             # Grade leaderboard
             elif choice == '4':
                 # clear the terminal
                 clear()
                 # ask user to input a grade
-                grade = input(
-                    "Enter the grade (e.g., 3, 6A, 9A): ").strip().upper()
+                grade = Prompt.ask("[bold cyan]"
+                                   "Enter the grade (e.g., 3, 6A, 9A): "
+                                   ).strip().upper()
                 # filter the scoring table based on that grade
                 grade_leaderboard = \
                     self.scoring_table.loc[
@@ -255,22 +246,22 @@ class ScoreCalculator():
                     grade_leaderboard[f'Num of {grade} Ascents'],
                     f'Num of {grade} Ascents'
                 )
-                # print the leaderborad to the terminal
-                print(f"\nMaster Grade Leaderboard for {grade}:\n")
-                print(grade_leaderboard)
+                # display the leaderboard
+                display_table(f"\nMaster Grade Leaderboard for {grade}",
+                              leaderboard)
 
             # Exit the loop
             elif choice == '5':
                 clear()
-
-                print("\nExiting the leaderboard menu ...\n")
+                console.print("\nExiting...\n", style="bold red")
                 break
 
             # Invalidate choice
             else:
                 clear()
-                print(f"\nInvalid choice. You've entered '{choice}'."
-                      " Please enter a number between 1 and 5.\n")
+                console.print(f"\nInvalid choice. You've entered '{choice}'."
+                              " Please enter a number between 1 and 5.\n",
+                              style="bold red")
 
     def calculate_scores(self):
         """
