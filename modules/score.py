@@ -5,6 +5,7 @@ based on the ascent log and aggregating the scores in a leaderboard.
 from gspread import Client
 from pandas import DataFrame
 from rich.prompt import Prompt
+from time import sleep
 from modules.helper import clear, rank_leaderboard
 from modules.rich_utils import console, display_table, show_help
 
@@ -204,7 +205,8 @@ class ScoreCalculator():
         # keep looping until user decides to exit
         while True:
             # Present the options to the user
-            console.print("\nPlease choose a leaderboard to view:",
+            console.print("\nPlease choose a leaderboard to view or type "
+                          "'help' for more information:",
                           style="bold cyan")
             console.print("1 - Total Score leaderboard", style="bold cyan")
             console.print("2 - Volume leaderboard", style="bold cyan")
@@ -267,6 +269,10 @@ class ScoreCalculator():
                 console.print(f"\nInvalid choice. You've entered '{choice}'."
                               " Please enter a number between 1 and 5.\n",
                               style="bold red")
+
+            # introduce slight delay to allow user to view output before
+            # prompting again
+            sleep(1)
 
     def calculate_scores(self):
         """
