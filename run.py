@@ -9,7 +9,7 @@ Imports the necessary classes/functions from the following modules:
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
 from rich.console import Console
-from rich.progress import Progress, track
+from rich.progress import Progress
 from rich.prompt import Prompt
 from modules.scraper import Scraper
 from modules.crag import Crag
@@ -41,7 +41,7 @@ GSC = GoogleSheetsClient(CREDS_FILE, SCOPE)
 console = Console()
 
 
-def compile_data(crag: Crag):
+def compile_data(crag: Crag, progress: Progress):
     """
     Compile data from a Crag instance into pandas DataFrames for boulders,
     routes, and ascents.
@@ -69,11 +69,10 @@ def compile_data(crag: Crag):
     ascent_data = []
 
     # Iterate through each boulder in the crag
-    for boulder in track(crag.boulders,
-                         description="Compiling boulder data..."):
+    for boulder in progress.track(crag.boulders,
+                                  description="Compiling scraped data..."):
         # Iterate through each route in the current boulder
-        for route in track(boulder.routes,
-                           description="Compiling route data..."):
+        for route in boulder.routes:
             # Append route information to route_data list
             route_data.append(
                 (route.name,
@@ -83,8 +82,7 @@ def compile_data(crag: Crag):
                  route.ascents,
                  route.rating))
             # Iterate through each ascent log in the current route
-            for ascent in track(route.ascent_log,
-                                description="Compiling ascent data..."):
+            for ascent in route.ascent_log:
                 # Append ascent information to ascent_data list
                 ascent_data.append(
                     (route.name,
@@ -117,34 +115,38 @@ def compile_data(crag: Crag):
     return boulder_data, route_data, ascent_data
 
 
-def scrape_data():
+def scrape_data(progress: Progress):
     """
     The main application function controlling the workflow and
     executing the imported classes and functions as required.
     """
-    # initialize progress bar
-    with Progress() as progress:
-        task = progress.add_task("Scraping crag data...", total=100)
+    # add task to progress bar
+    task = progress.add_task("Scraping crag data...", total=100)
 
-        # Initialize a scraper instance and store data in an object
-        scraper = Scraper(HEADERS)
-        crag = Crag(CRAG_URL, scraper)
-        progress.update(task, advance=50)
+    # Initialize a scraper instance and store data in an object
+    scraper = Scraper(HEADERS)
+    crag = Crag(CRAG_URL, scraper)
+    progress.update(task, advance=60)
+    console.print("\nCrag successfully scraped!\n", style="bold green")
 
-        # prepare data for google sheets
-        boulder_data, route_data, ascent_data = compile_data(crag)
-        progress.update(task, advance=30)
+    # prepare data for google sheets
+    console.print("\nCompiling data to write to google sheets ...\n",
+                  style="bold yellow")
+    boulder_data, route_data, ascent_data = compile_data(crag, progress)
+    progress.update(task, advance=20)
 
-        # write data to gsheet
-        print("Writing data to google sheets ...\n")
-        GSC.write_data_to_sheet('data', 'boulders', boulder_data)
-        GSC.write_data_to_sheet('data', 'routes', route_data)
-        GSC.write_data_to_sheet('data', 'ascents', ascent_data)
-        GSC.update_timestamp('data')
-        progress.update(task, advance=20)
+    # write data to gsheet
+    console.print("\nWriting data to google sheets ...\n", style="bold yellow")
+    GSC.write_data_to_sheet('data', 'boulders', boulder_data)
+    GSC.write_data_to_sheet('data', 'routes', route_data)
+    GSC.write_data_to_sheet('data', 'ascents', ascent_data)
+    GSC.update_timestamp('data')
+    progress.update(task, advance=20)
+    console.print("\nFinished writing data to google sheets ...\n",
+                  style="bold green")
 
 
-def retrieve_data():
+def retrieve_data(progress: Progress):
     """
     Retrieve existing data from Google Sheets and parse into dataframes.
 
@@ -152,15 +154,18 @@ def retrieve_data():
         tuple: A tuple containing three pandas DataFrames:
                 (boulder_data, route_data, ascent_data).
     """
-
+    task = progress.add_task("[red]Retrieving data...", total=100)
     # Retrieve data from worksheets
     try:
         boulder_data = pd.DataFrame(
             GSC.get_sheet_data('data', 'boulders'))
+        progress.update(task, advance=20)
         route_data = pd.DataFrame(
             GSC.get_sheet_data('data', 'routes'))
+        progress.update(task, advance=40)
         ascent_data = pd.DataFrame(
             GSC.get_sheet_data('data', 'ascents'))
+        progress.update(task, advance=40)
 
     except WorksheetNotFound:
         return console.print('Error: The data does '
@@ -248,31 +253,32 @@ def main():
 
     # if user choses to scrape, then call scrape_data function
     # and then retrieve_data to print to console
-    if choice == 'scrape':
-        scrape_data()
-        boulder_data, route_data, ascent_data = retrieve_data()
-        console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-                      f"\n- {len(route_data)} Routes"
-                      f"\n- {len(ascent_data)} Ascents\n",
-                      style="bold green")
+    with Progress() as progress:
+        if choice == 'scrape':
+            scrape_data(progress)
+            boulder_data, route_data, ascent_data = retrieve_data(progress)
+            console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                          f"\n- {len(route_data)} Routes"
+                          f"\n- {len(ascent_data)} Ascents\n",
+                          style="bold green")
 
-    # if user chooses to retrieve, then call retrieve_data function
-    # and simply retrieve the existing data on google drive
-    elif choice == 'retrieve':
-        boulder_data, route_data, ascent_data = retrieve_data()
-        console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-                      f"\n- {len(route_data)} Routes"
-                      f"\n- {len(ascent_data)} Ascents\n",
-                      style="bold green")
+        # if user chooses to retrieve, then call retrieve_data function
+        # and simply retrieve the existing data on google drive
+        elif choice == 'retrieve':
+            boulder_data, route_data, ascent_data = retrieve_data(progress)
+            console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                          f"\n- {len(route_data)} Routes"
+                          f"\n- {len(ascent_data)} Ascents\n",
+                          style="bold green")
 
-    # initialize the score calculator class and calculate scores
-    console.print("\nCalculating scores ...\n", style="bold yellow")
-    score_calculator = ScoreCalculator(GSC, ascent_data)
-    score_calculator.calculate_scores()
+        # initialize the score calculator class and calculate scores
+        console.print("\nCalculating scores ...\n", style="bold yellow")
+        score_calculator = ScoreCalculator(GSC, ascent_data)
+        score_calculator.calculate_scores()
 
-    # prompt the user to choose the leaderboard
-    # before printing to the terminal
-    score_calculator.leaderboard_mode()
+        # prompt the user to choose the leaderboard
+        # before printing to the terminal
+        score_calculator.leaderboard_mode()
 
 
 if __name__ == "__main__":
