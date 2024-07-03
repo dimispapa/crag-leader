@@ -4,7 +4,7 @@ based on the ascent log and aggregating the scores in a leaderboard.
 """
 from gspread import Client
 from pandas import DataFrame
-from helper import clear, rank_leaderboard
+from modules.helper import clear, rank_leaderboard
 
 
 class ScoreCalculator():

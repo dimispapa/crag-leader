@@ -8,11 +8,11 @@ Imports the necessary classes/functions from the following modules:
 
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
-from scraper import Scraper
-from crag import Crag
-from gsheets import GoogleSheetsClient
-from score import ScoreCalculator
-from helper import clear
+from modules.scraper import Scraper
+from modules.crag import Crag
+from modules.gsheets import GoogleSheetsClient
+from modules.score import ScoreCalculator
+from modules.helper import clear
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
