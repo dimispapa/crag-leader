@@ -15,7 +15,7 @@ from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.gsheets import GoogleSheetsClient
 from modules.score import ScoreCalculator
-from modules.helper import clear
+from modules.helper import clear, welcome_msg
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
@@ -233,10 +233,7 @@ async def main():
     # pd.set_option('display.colheader_justify', 'left')
 
     # welcome message
-    console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
-                  "designed for boulderers who log their ascents on 27crags, "
-                  "on the Inia & Droushia crag in Cyprus!"
-                  "\n", style="bold cyan")
+    welcome_msg()
     # Get user choice
     choice = get_user_choice()
 

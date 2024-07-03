@@ -3,6 +3,7 @@ Module contains helper functions used in other modules.
 """
 import os
 from pandas import DataFrame, Series
+from modules.rich_utils import console
 
 
 def clear():
@@ -39,3 +40,22 @@ def rank_leaderboard(leaderboard: DataFrame or Series, ranking_column: str):
     ranked_leaderboard = leaderboard.sort_values(by='Rank')
 
     return ranked_leaderboard
+
+
+def welcome_msg():
+    """
+    Prints the welcome message and ASCII art to the console.
+    """
+    ascii_art = r"""
+                _                 _     _
+                | |               | |   | |
+                | |__   ___  _   _| | __| | ___ _ __
+                | '_ \ / _ \| | | | |/ _` |/ _ \ '__|
+                | |_) | (_) | |_| | | (_| |  __/ |
+                |_.__/ \___/ \__,_|_|\__,_|\___|_|
+                """
+    console.print(ascii_art, style="bold green")
+    console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
+                  "designed for boulderers who log their ascents on 27crags, "
+                  "on the Inia & Droushia crag in Cyprus!"
+                  "\n", style="bold cyan")
