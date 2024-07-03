@@ -2,10 +2,10 @@
 A module containg classes and method used for calculating the scores, bonuses,
 based on the ascent log and aggregating the scores in a leaderboard.
 """
+from time import sleep
 from gspread import Client
 from pandas import DataFrame
 from rich.prompt import Prompt
-from time import sleep
 from modules.helper import clear, rank_leaderboard
 from modules.rich_utils import console, display_table, show_help
 
