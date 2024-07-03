@@ -6,7 +6,7 @@ from gspread import Client
 from pandas import DataFrame
 from rich.prompt import Prompt
 from modules.helper import clear, rank_leaderboard
-from rich_utils import console, display_table
+from rich_utils import console, display_table, show_help
 
 
 class ScoreCalculator():
@@ -255,6 +255,11 @@ class ScoreCalculator():
                 clear()
                 console.print("\nExiting...\n", style="bold red")
                 break
+
+            # display help options
+            elif choice == 'help':
+                clear()
+                show_help()
 
             # Invalidate choice
             else:
