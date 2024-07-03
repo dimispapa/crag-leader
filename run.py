@@ -8,6 +8,9 @@ Imports the necessary classes/functions from the following modules:
 
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
+from rich.console import Console
+from rich.progress import Progress, track
+from rich.prompt import Prompt
 from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.gsheets import GoogleSheetsClient
@@ -33,6 +36,9 @@ CREDS_FILE = "creds.json"
 
 # Create an instance of GoogleSheetsClient
 GSC = GoogleSheetsClient(CREDS_FILE, SCOPE)
+
+# initialize the Console object
+console = Console()
 
 
 def compile_data(crag: Crag):
@@ -63,9 +69,11 @@ def compile_data(crag: Crag):
     ascent_data = []
 
     # Iterate through each boulder in the crag
-    for boulder in crag.boulders:
+    for boulder in track(crag.boulders,
+                         description="Compiling boulder data..."):
         # Iterate through each route in the current boulder
-        for route in boulder.routes:
+        for route in track(boulder.routes,
+                           description="Compiling route data..."):
             # Append route information to route_data list
             route_data.append(
                 (route.name,
@@ -75,7 +83,8 @@ def compile_data(crag: Crag):
                  route.ascents,
                  route.rating))
             # Iterate through each ascent log in the current route
-            for ascent in route.ascent_log:
+            for ascent in track(route.ascent_log,
+                                description="Compiling ascent data..."):
                 # Append ascent information to ascent_data list
                 ascent_data.append(
                     (route.name,
@@ -113,23 +122,26 @@ def scrape_data():
     The main application function controlling the workflow and
     executing the imported classes and functions as required.
     """
+    # initialize progress bar
+    with Progress() as progress:
+        task = progress.add_task("Scraping crag data...", total=100)
 
-    # Initialize a scraper instance and store data in an object
-    scraper = Scraper(HEADERS)
-    crag = Crag(CRAG_URL, scraper)
-    print("Crag successfully scraped!\n")
+        # Initialize a scraper instance and store data in an object
+        scraper = Scraper(HEADERS)
+        crag = Crag(CRAG_URL, scraper)
+        progress.update(task, advance=50)
 
-    # prepare data for google sheets
-    print("Compiling data to write to google sheets ...\n")
-    boulder_data, route_data, ascent_data = compile_data(crag)
+        # prepare data for google sheets
+        boulder_data, route_data, ascent_data = compile_data(crag)
+        progress.update(task, advance=30)
 
-    # write data to gsheet
-    print("Writing data to google sheets ...\n")
-    GSC.write_data_to_sheet('data', 'boulders', boulder_data)
-    GSC.write_data_to_sheet('data', 'routes', route_data)
-    GSC.write_data_to_sheet('data', 'ascents', ascent_data)
-    GSC.update_timestamp('data')
-    print("Finished writing data to google sheets ...\n")
+        # write data to gsheet
+        print("Writing data to google sheets ...\n")
+        GSC.write_data_to_sheet('data', 'boulders', boulder_data)
+        GSC.write_data_to_sheet('data', 'routes', route_data)
+        GSC.write_data_to_sheet('data', 'ascents', ascent_data)
+        GSC.update_timestamp('data')
+        progress.update(task, advance=20)
 
 
 def retrieve_data():
@@ -151,17 +163,17 @@ def retrieve_data():
             GSC.get_sheet_data('data', 'ascents'))
 
     except WorksheetNotFound:
-        return print('Error: The data does '
-                     'not exist. Please choose the "scrape" option to '
-                     'retrieve data from 27crags.\n')
+        return console.print('Error: The data does '
+                             'not exist. Please choose the "scrape" option to '
+                             'retrieve data from 27crags.\n', style="bold red")
 
     except SpreadsheetNotFound:
-        return print('Error: The Google Sheet file '
-                     'does not exist, please create a Google sheet file'
-                     ' with name "data" and then choose '
-                     'to "scrape".\n')
+        return console.print('Error: The Google Sheet file '
+                             'does not exist, please create a Google sheet '
+                             'file with name "data" and then choose '
+                             'to "scrape".\n', style="bold red")
 
-    print("\nData retrieval completed.\n")
+    console.print("\nData retrieval completed.\n", style="bold green")
 
     return boulder_data, route_data, ascent_data
 
@@ -180,14 +192,15 @@ def get_user_choice():
         try:
             timestamp = GSC.get_timestamp('data')
         except ValueError as ve:
-            print(f"Error retrieving timestamp: {ve}\n"
-                  "Processing a new scrape as default option ...\n")
+            console.print(f"Error retrieving timestamp: {ve}\n"
+                          "Processing a new scrape as default option ...\n",
+                          style="bold red")
             return 'scrape'
 
         # prompt user choice.
         # Case-insesitive and remove leading/trailing spaces
-        choice = input(
-            f"Crag data has been last updated on: {timestamp}.\n"
+        choice = Prompt.ask(
+            f"[bold cyan]Crag data has been last updated on: {timestamp}.\n"
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
             "(Please type 1 for 'scraping latest data' or "
@@ -197,16 +210,18 @@ def get_user_choice():
         # check if entry is empty (or spaces):
         if not choice:
             clear()
-            print("\n Invalid choice. You did not enter a value.\n"
-                  "(Please enter 1 for 'scraping latest data' or "
-                  "2 for 'retrieving current stored data'.): \n")
+            console.print("\n Invalid choice. You did not enter a value.\n"
+                          "(Please enter 1 for 'scraping latest data' or "
+                          "2 for 'retrieving current stored data'.): \n",
+                          style="bold red")
 
         # validate user choice
         elif choice not in ['1', '2']:
             clear()
-            print(f"\nInvalid choice. You've entered '{choice}'. \n"
-                  "(Please enter 1 for 'scraping latest data' or "
-                  "2 for 'retrieving current stored data'.): \n")
+            console.print(f"\nInvalid choice. You've entered '{choice}'. \n"
+                          "(Please enter 1 for 'scraping latest data' or "
+                          "2 for 'retrieving current stored data'.): \n",
+                          style="bold red")
         else:
             return 'scrape' if choice == '1' else 'retrieve'
 
@@ -225,8 +240,9 @@ def main():
     pd.set_option('display.colheader_justify', 'left')
 
     # welcome message
-    print("Welcome to the CRAG LEADER application. A leaderboard designed for"
-          " boulderers who log their ascents on 27crags!\n")
+    console.print("Welcome to the CRAG LEADER application. A leaderboard "
+                  "designed for boulderers who log their ascents on 27crags!"
+                  "\n", style="bold cyan")
     # Get user choice
     choice = get_user_choice()
 
@@ -235,20 +251,22 @@ def main():
     if choice == 'scrape':
         scrape_data()
         boulder_data, route_data, ascent_data = retrieve_data()
-        print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-              f"\n- {len(route_data)} Routes"
-              f"\n- {len(ascent_data)} Ascents\n")
+        console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                      f"\n- {len(route_data)} Routes"
+                      f"\n- {len(ascent_data)} Ascents\n",
+                      style="bold green")
 
     # if user chooses to retrieve, then call retrieve_data function
     # and simply retrieve the existing data on google drive
     elif choice == 'retrieve':
         boulder_data, route_data, ascent_data = retrieve_data()
-        print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-              f"\n- {len(route_data)} Routes"
-              f"\n- {len(ascent_data)} Ascents\n")
+        console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                      f"\n- {len(route_data)} Routes"
+                      f"\n- {len(ascent_data)} Ascents\n",
+                      style="bold green")
 
     # initialize the score calculator class and calculate scores
-    print("\nCalculating scores ...\n")
+    console.print("\nCalculating scores ...\n", style="bold yellow")
     score_calculator = ScoreCalculator(GSC, ascent_data)
     score_calculator.calculate_scores()
 
