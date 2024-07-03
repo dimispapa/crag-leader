@@ -10,7 +10,7 @@ import asyncio
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
 from rich.prompt import Prompt
-from rich_utils import console, progress
+from modules.rich_utils import console, progress
 from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.gsheets import GoogleSheetsClient
@@ -230,7 +230,7 @@ async def main():
     # Set a large enough width to avoid line wrapping
     pd.set_option('display.width', 1000)
     # Justify column headers to the left
-    pd.set_option('display.colheader_justify', 'left')
+    # pd.set_option('display.colheader_justify', 'left')
 
     # welcome message
     console.print("Welcome to the CRAG LEADER application.\nA leaderboard "

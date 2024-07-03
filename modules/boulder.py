@@ -3,7 +3,7 @@ The Boulder class with stored attributes on initialization and methods to
 extract information regarding the routes contained in a boulder, by
 initializing a Route instance for each route related to a Boulder instance.
 """
-from rich_utils import console
+from modules.rich_utils import console
 from modules.scraper import Scraper
 from modules.route import Route
 

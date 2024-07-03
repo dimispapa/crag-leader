@@ -6,7 +6,7 @@ from gspread import Client
 from pandas import DataFrame
 from rich.prompt import Prompt
 from modules.helper import clear, rank_leaderboard
-from rich_utils import console, display_table, show_help
+from modules.rich_utils import console, display_table, show_help
 
 
 class ScoreCalculator():
@@ -191,7 +191,7 @@ class ScoreCalculator():
         # Dictionary to map user choices to leaderboard columns and
         # descriptions
         leaderboard_options = {
-            '1': ('Total Score', 'Overall leaderboard - ranks climbers'
+            '1': ('Total Score', 'Overall leaderboard - ranks climbers '
                   'after summing up the Base Points based on grade (double '
                   'points for flash), Volume Score and Unique Ascent Score.'),
             '2': ('Volume Score', 'Volume leaderboard - ranks climbers based '

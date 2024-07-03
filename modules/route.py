@@ -4,7 +4,7 @@ extract information regarding the ascents logged relevant to a Route instance.
 """
 from datetime import datetime
 from bs4 import BeautifulSoup
-from rich_utils import console
+from modules.rich_utils import console
 from modules.scraper import Scraper
 
 

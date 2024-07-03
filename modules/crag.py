@@ -3,7 +3,7 @@ The Crag class with stored attributes on initialization and methods to
 extract information regarding the boulders contained in the crag, by
 initializing a Boulder instance for each boulder related to a Crag instance.
 """
-from rich_utils import console, progress
+from modules.rich_utils import console, progress
 from modules.scraper import Scraper
 from modules.boulder import Boulder
 

@@ -25,6 +25,8 @@ def display_table(title: str, leaderboard: DataFrame):
         leaderboard (pandas.DataFrame): The DataFrame containing the
                                         leaderboard data.
     """
+    # Reset index to make sure index is not used as a column
+    leaderboard = leaderboard.reset_index()
     # create a table with title or description
     table = Table(title=title)
     # add columns to the table
