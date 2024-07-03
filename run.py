@@ -195,7 +195,7 @@ def get_user_choice():
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
             "(Please type 1 for 'scraping latest data' or "
-            "2 for 'retrieving current stored data'.)"
+            "2 for 'retrieving current stored data, then press enter.'.)"
         ).strip().lower()
 
         # check if entry is empty (or spaces):
@@ -234,7 +234,8 @@ async def main():
 
     # welcome message
     console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
-                  "designed for boulderers who log their ascents on 27crags!"
+                  "designed for boulderers who log their ascents on 27crags, "
+                  "on the Inia & Droushia crag in Cyprus!"
                   "\n", style="bold cyan")
     # Get user choice
     choice = get_user_choice()
