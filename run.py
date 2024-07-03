@@ -6,11 +6,11 @@ Imports the necessary classes/functions from the following modules:
 - scraper.py
 """
 
+import asyncio
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound
-from rich.console import Console
-from rich.progress import Progress
 from rich.prompt import Prompt
+from rich_utils import console, progress
 from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.gsheets import GoogleSheetsClient
@@ -37,11 +37,8 @@ CREDS_FILE = "creds.json"
 # Create an instance of GoogleSheetsClient
 GSC = GoogleSheetsClient(CREDS_FILE, SCOPE)
 
-# initialize the Console object
-console = Console()
 
-
-def compile_data(crag: Crag, progress: Progress):
+def compile_data(crag: Crag):
     """
     Compile data from a Crag instance into pandas DataFrames for boulders,
     routes, and ascents.
@@ -53,7 +50,6 @@ def compile_data(crag: Crag, progress: Progress):
         tuple: A tuple containing three pandas DataFrames:
                 (boulder_data, route_data, ascent_data).
     """
-
     # Create a DataFrame for boulders with their names, URLs,
     # and lists of associated routes
     boulder_data = pd.DataFrame([(b.name,
@@ -69,8 +65,7 @@ def compile_data(crag: Crag, progress: Progress):
     ascent_data = []
 
     # Iterate through each boulder in the crag
-    for boulder in progress.track(crag.boulders,
-                                  description="Compiling scraped data..."):
+    for boulder in crag.boulders:
         # Iterate through each route in the current boulder
         for route in boulder.routes:
             # Append route information to route_data list
@@ -115,25 +110,20 @@ def compile_data(crag: Crag, progress: Progress):
     return boulder_data, route_data, ascent_data
 
 
-def scrape_data(progress: Progress):
+async def scrape_data():
     """
     The main application function controlling the workflow and
     executing the imported classes and functions as required.
     """
-    # add task to progress bar
-    task = progress.add_task("Scraping crag data...", total=100)
-
     # Initialize a scraper instance and store data in an object
     scraper = Scraper(HEADERS)
     crag = Crag(CRAG_URL, scraper)
-    progress.update(task, advance=60)
     console.print("\nCrag successfully scraped!\n", style="bold green")
 
     # prepare data for google sheets
     console.print("\nCompiling data to write to google sheets ...\n",
                   style="bold yellow")
-    boulder_data, route_data, ascent_data = compile_data(crag, progress)
-    progress.update(task, advance=20)
+    boulder_data, route_data, ascent_data = compile_data(crag)
 
     # write data to gsheet
     console.print("\nWriting data to google sheets ...\n", style="bold yellow")
@@ -141,12 +131,11 @@ def scrape_data(progress: Progress):
     GSC.write_data_to_sheet('data', 'routes', route_data)
     GSC.write_data_to_sheet('data', 'ascents', ascent_data)
     GSC.update_timestamp('data')
-    progress.update(task, advance=20)
     console.print("\nFinished writing data to google sheets ...\n",
                   style="bold green")
 
 
-def retrieve_data(progress: Progress):
+async def retrieve_data():
     """
     Retrieve existing data from Google Sheets and parse into dataframes.
 
@@ -154,18 +143,15 @@ def retrieve_data(progress: Progress):
         tuple: A tuple containing three pandas DataFrames:
                 (boulder_data, route_data, ascent_data).
     """
-    task = progress.add_task("[red]Retrieving data...", total=100)
+    console.print("Retrieving data...\n", style="bold yellow")
     # Retrieve data from worksheets
     try:
         boulder_data = pd.DataFrame(
             GSC.get_sheet_data('data', 'boulders'))
-        progress.update(task, advance=20)
         route_data = pd.DataFrame(
             GSC.get_sheet_data('data', 'routes'))
-        progress.update(task, advance=40)
         ascent_data = pd.DataFrame(
             GSC.get_sheet_data('data', 'ascents'))
-        progress.update(task, advance=40)
 
     except WorksheetNotFound:
         return console.print('Error: The data does '
@@ -209,7 +195,7 @@ def get_user_choice():
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
             "(Please type 1 for 'scraping latest data' or "
-            "2 for 'retrieving current stored data'.): "
+            "2 for 'retrieving current stored data'.)"
         ).strip().lower()
 
         # check if entry is empty (or spaces):
@@ -217,7 +203,7 @@ def get_user_choice():
             clear()
             console.print("\n Invalid choice. You did not enter a value.\n"
                           "(Please enter 1 for 'scraping latest data' or "
-                          "2 for 'retrieving current stored data'.): \n",
+                          "2 for 'retrieving current stored data'.)\n",
                           style="bold red")
 
         # validate user choice
@@ -225,18 +211,20 @@ def get_user_choice():
             clear()
             console.print(f"\nInvalid choice. You've entered '{choice}'. \n"
                           "(Please enter 1 for 'scraping latest data' or "
-                          "2 for 'retrieving current stored data'.): \n",
+                          "2 for 'retrieving current stored data'.)\n",
                           style="bold red")
         else:
             return 'scrape' if choice == '1' else 'retrieve'
 
 
-def main():
+async def main():
     """
     The main application function, prompting the user,
     controlling the workflow and executing the imported
     methods and functions as required.
     """
+    # begin by clearing the terminal to declutter
+    clear()
     # Ensure all columns are shown next to each other when printing
     pd.set_option('display.max_columns', None)  # Show all columns
     # Set a large enough width to avoid line wrapping
@@ -253,33 +241,38 @@ def main():
 
     # if user choses to scrape, then call scrape_data function
     # and then retrieve_data to print to console
-    with Progress() as progress:
-        if choice == 'scrape':
-            scrape_data(progress)
-            boulder_data, route_data, ascent_data = retrieve_data(progress)
-            console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-                          f"\n- {len(route_data)} Routes"
-                          f"\n- {len(ascent_data)} Ascents\n",
-                          style="bold green")
+    if choice == 'scrape':
+        # open the progress context manager to track scraping
+        with progress:
+            await scrape_data()
+        # retrieve data
+        boulder_data, route_data, ascent_data = \
+            await retrieve_data()
+        console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                      f"\n- {len(route_data)} Routes"
+                      f"\n- {len(ascent_data)} Ascents\n",
+                      style="bold green")
 
-        # if user chooses to retrieve, then call retrieve_data function
-        # and simply retrieve the existing data on google drive
-        elif choice == 'retrieve':
-            boulder_data, route_data, ascent_data = retrieve_data(progress)
-            console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-                          f"\n- {len(route_data)} Routes"
-                          f"\n- {len(ascent_data)} Ascents\n",
-                          style="bold green")
+    # if user chooses to retrieve, then call retrieve_data function
+    # and simply retrieve the existing data on google drive
+    elif choice == 'retrieve':
+        boulder_data, route_data, ascent_data = \
+            await retrieve_data()
+        console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                      f"\n- {len(route_data)} Routes"
+                      f"\n- {len(ascent_data)} Ascents\n",
+                      style="bold green")
 
-        # initialize the score calculator class and calculate scores
-        console.print("\nCalculating scores ...\n", style="bold yellow")
-        score_calculator = ScoreCalculator(GSC, ascent_data)
-        score_calculator.calculate_scores()
+    # initialize the score calculator class and calculate scores
+    console.print("\nCalculating scores ...\n", style="bold yellow")
+    score_calculator = ScoreCalculator(GSC, ascent_data)
+    score_calculator.calculate_scores()
+    console.print("\nScores have been calculated!\n", style="bold green")
 
-        # prompt the user to choose the leaderboard
-        # before printing to the terminal
-        score_calculator.leaderboard_mode()
+    # prompt the user to choose the leaderboard
+    # before printing to the terminal
+    score_calculator.leaderboard_mode()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

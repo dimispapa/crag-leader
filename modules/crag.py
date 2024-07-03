@@ -3,6 +3,7 @@ The Crag class with stored attributes on initialization and methods to
 extract information regarding the boulders contained in the crag, by
 initializing a Boulder instance for each boulder related to a Crag instance.
 """
+from rich_utils import console, progress
 from modules.scraper import Scraper
 from modules.boulder import Boulder
 
@@ -31,6 +32,7 @@ class Crag:
             scraper (Scraper): The scraper instance to handle HTTP requests
                                 and HTML parsing.
         """
+        self.console = console
         self.crag_url = crag_url
         # get the base 27crags domain url for use later in url navigation
         self.base_url = self.crag_url.split(".com")[0] + ".com"
@@ -38,9 +40,11 @@ class Crag:
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
-        print("Please wait while the scraper is retrieving info from "
-              f"'{self.crag_url}' ...\n")
+        self.console.print("Please wait while the scraper is retrieving info "
+                           f"from '{self.crag_url}' ...\n",
+                           style="bold yellow")
         self.boulders = self.get_boulders()
+        self.progress = progress
 
     def get_boulders(self):
         """
@@ -50,7 +54,8 @@ class Crag:
             list: A list of Boulder instances.
         """
         # scrape parsed html content from url
-        print(f'Scraping boulder list from "{self.routelist_url}" crag...\n')
+        console.print(f'\nScraping boulder list from "{self.routelist_url} "'
+                      'crag...\n', style="bold yellow")
         soup = self.scraper.get_html(self.routelist_url)
 
         # locate anchor elements with "sector-item" class.
@@ -61,14 +66,17 @@ class Crag:
 
         boulders = []  # initialize empty boulders list
 
+        # initiate the progress task object to keep track
+        task = progress.add_task("[yellow]Scraping crag data...",
+                                 total=len(boulder_elements))
         # loop through the boulder elements to extract the boulder name
         # and url
-        print("Extracting boulder info...\n")
         for boulder_elem in boulder_elements:
             # extract attributes from anchor element
             boulder_name = boulder_elem.find(
                 'div', attrs={'class': 'name'}).text.strip()
-            print(f'Processing boulder info for "{boulder_name}" ...\n')
+            console.print(
+                f'\nProcessing boulder info for "{boulder_name}" ...\n')
             # concat the boulder url on the base url
             boulder_url = self.base_url + boulder_elem['href']
 
@@ -76,6 +84,8 @@ class Crag:
             boulder = Boulder(boulder_name, boulder_url,
                               self.base_url, self.scraper)
             boulders.append(boulder)
+            # update the task progress
+            progress.update(task, advance=1)
 
         # return the boulders list
         return boulders

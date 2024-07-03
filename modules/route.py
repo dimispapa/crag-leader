@@ -4,6 +4,7 @@ extract information regarding the ascents logged relevant to a Route instance.
 """
 from datetime import datetime
 from bs4 import BeautifulSoup
+from rich_utils import console
 from modules.scraper import Scraper
 
 
@@ -73,8 +74,8 @@ class Route:
         """
 
         # Get the initial page and parse the HTML
-        print(f'Scraping ascent log info from "{self.url}" for "{self.name}" '
-              'route ...\n')
+        console.print(f'\nScraping ascent log info for "{self.name}" '
+                      'route ...\n', style="bold yellow")
         soup = self.scraper.get_html(self.url)
         ascent_log = self.extract_ascent_log(soup)
 
@@ -90,8 +91,9 @@ class Route:
                 # get full URL for scraper to access
                 full_more_ascents_url = self.base_url + more_ascents_url
                 # scrape additional ascents
-                print('Scraping additional ascents from '
-                      f'"{full_more_ascents_url}" ...\n')
+                console.print('\nScraping additional ascents from '
+                              f'"{full_more_ascents_url}" ...\n',
+                              style="bold yellow")
                 # fetch the url page with the printed json
                 more_ascents_soup = self.scraper.get_json_html(
                     full_more_ascents_url)
@@ -122,15 +124,15 @@ class Route:
 
         # check if there are any logs
         if log_elements:
-
             # loop through the log elements and extract ascent data
             for log in log_elements:
                 try:
                     # get the climber's name
                     climber = log.find(
                         'a', attrs={'class': 'action'}).text.strip()
-                    print('Processing ascent log '
-                          f'info of climber "{climber}" ...\n')
+                    console.print('\nProcessing ascent log '
+                                  f'info of climber "{climber}" ...\n',
+                                  style='bold yellow')
                     # get the ascent type and format string to be
                     # all lower no spaces
                     ascent_type = log.find(

@@ -3,6 +3,7 @@ The Boulder class with stored attributes on initialization and methods to
 extract information regarding the routes contained in a boulder, by
 initializing a Route instance for each route related to a Boulder instance.
 """
+from rich_utils import console
 from modules.scraper import Scraper
 from modules.route import Route
 
@@ -59,8 +60,6 @@ class Boulder:
         """
 
         # scrape parsed html content from url
-        print(f'Scraping list of routes from "{self.url}" for "{self.name}" '
-              'boulder ...\n')
         soup = self.scraper.get_html(self.url)
 
         # locate the tbody of the table element and the tr elements
@@ -68,12 +67,16 @@ class Boulder:
 
         routes = []  # initialize empty routes list
 
+        # find the tr elements
+        tr_elements = routes_table_tbody.find_all('tr')
+
         # loop through the tbody rows
-        for tr_element in routes_table_tbody.find_all('tr'):
+        for tr_element in tr_elements:
             # get the anchor element in the tr and extract name and url
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
-            print(f'Extracting route info for "{route_name}"...\n')
+            console.print(f'\nExtracting route info for "{route_name}"...\n',
+                          style="bold yellow")
             # concat the route url on the base url
             route_url = self.base_url + anchor['href']
 
