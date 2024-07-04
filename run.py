@@ -169,7 +169,8 @@ def leaderboard_mode(agg_table: pd.DataFrame,
         else:
             clear()
             console.print(f"\nInvalid choice. You've entered '{choice}'."
-                          " Please enter a number between 1 and 5.\n",
+                          " Please enter a number between 1 and 5, "
+                          "or type 'help' for more info.\n",
                           style="bold red")
 
         # introduce slight delay to allow user to view output before
