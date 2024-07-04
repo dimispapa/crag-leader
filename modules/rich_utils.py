@@ -25,8 +25,6 @@ def display_table(title: str, leaderboard: DataFrame):
         leaderboard (pandas.DataFrame): The DataFrame containing the
                                         leaderboard data.
     """
-    # clear the terminal
-    console.clear()
     # add two empty lines
     console.print("\n\n")
     # create a table with title or description
