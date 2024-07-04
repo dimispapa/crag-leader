@@ -5,8 +5,6 @@ Imports the necessary classes/functions from the following modules:
 - gsheets.py
 - scraper.py
 """
-
-import asyncio
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound, exceptions
 from rich.prompt import Prompt
@@ -242,10 +240,10 @@ async def main():
     if choice == 'scrape':
         # open the progress context manager to track scraping
         with progress:
-            await scrape_data()
+            scrape_data()
         # retrieve data
         boulder_data, route_data, ascent_data = \
-            await retrieve_data()
+            retrieve_data()
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
@@ -255,7 +253,7 @@ async def main():
     # and simply retrieve the existing data on google drive
     elif choice == 'retrieve':
         boulder_data, route_data, ascent_data = \
-            await retrieve_data()
+            retrieve_data()
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
@@ -273,7 +271,7 @@ async def main():
 
 try:
     if __name__ == "__main__":
-        asyncio.run(main())
+        main()
 
 except exceptions.APIError as e:
     console.print(
