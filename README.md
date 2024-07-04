@@ -5,7 +5,7 @@
 ![bouldering-image](documentation/images/ai-boulder-art.webp)
 <br/>
 
-This app aims to then process that scraped information and based on a scoring system, it is capable of displaying a number of leaderboards depending on the chosen criteria (overall, volume, unique ascent etc.). The current prototype version is focused on my local bouldering crag in Inia & Droushia of Cyprus but wider use of the app on other crags of the same platform is possible with some minor adjustments.
+This app aims to process the scraped information and it is capable of displaying a number of leaderboards depending on the chosen criteria (overall, volume, unique ascent etc.), with a pre-defined scoring system. The current prototype version is focused on my local bouldering crag in Inia & Droushia of Cyprus but wider use of the app on other crags of the same platform is possible with some minor adjustments.
 
 <br/>
 
