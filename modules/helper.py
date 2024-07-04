@@ -171,7 +171,7 @@ def retrieve_data(gsc: client):
         tuple: A tuple containing three pandas DataFrames:
                 (boulder_data, route_data, ascent_data).
     """
-    console.print("Retrieving data...\n", style="bold yellow")
+    console.print("\nRetrieving data...\n", style="bold yellow")
     # Retrieve data from worksheets
     try:
         boulder_data = pd.DataFrame(
