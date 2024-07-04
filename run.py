@@ -108,7 +108,7 @@ def compile_data(crag: Crag):
     return boulder_data, route_data, ascent_data
 
 
-async def scrape_data():
+def scrape_data():
     """
     The main application function controlling the workflow and
     executing the imported classes and functions as required.
@@ -133,7 +133,7 @@ async def scrape_data():
                   style="bold green")
 
 
-async def retrieve_data():
+def retrieve_data():
     """
     Retrieve existing data from Google Sheets and parse into dataframes.
 
@@ -215,7 +215,7 @@ def get_user_choice():
             return 'scrape' if choice == '1' else 'retrieve'
 
 
-async def main():
+def main():
     """
     The main application function, prompting the user,
     controlling the workflow and executing the imported
@@ -268,6 +268,7 @@ async def main():
     # prompt the user to choose the leaderboard
     # before printing to the terminal
     score_calculator.leaderboard_mode()
+
 
 try:
     if __name__ == "__main__":
