@@ -105,6 +105,8 @@ def leaderboard_mode(agg_table: pd.DataFrame,
 
     # keep looping until user decides to exit
     while True:
+        # first clear the terminal from clutter
+        clear()
         # Present the options to the user
         console.print("\nPlease choose a leaderboard to view or type "
                       "'help' for more information:",
