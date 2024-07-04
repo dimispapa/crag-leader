@@ -2,12 +2,8 @@
 A module containg classes and method used for calculating the scores, bonuses,
 based on the ascent log and aggregating the scores in a leaderboard.
 """
-from time import sleep
 from gspread import Client
 from pandas import DataFrame
-from rich.prompt import Prompt
-from modules.helper import clear, rank_leaderboard
-from modules.rich_utils import console, display_table, show_help
 
 
 class ScoreCalculator():
@@ -90,10 +86,6 @@ class ScoreCalculator():
         """
         Calculate the base points for each ascent and add it to the DataFrame.
         If the ascent type is "flash", the base points are doubled.
-
-        Returns:
-            pandas.DataFrame: A DataFrame with the calculated base points for
-                                each ascent.
         """
         # define a mappping function to apply on the dataframe
         def get_base_points(row):
@@ -106,16 +98,10 @@ class ScoreCalculator():
         self.scoring_table['Base Points'] = self.scoring_table.apply(
             get_base_points, axis=1).astype(int)
 
-        return self.scoring_table
-
     def calc_volume_bonus(self):
         """
         Calculate the volume bonus for each climber based on the number of
         ascents.
-
-        Returns:
-            pandas.DataFrame: A DataFrame with the volume bonus for each
-                                climber.
         """
         # group the scoring table by the climber and count numbers of ascents
         volume_bonus = self.scoring_table.groupby(
@@ -138,10 +124,6 @@ class ScoreCalculator():
     def calc_unique_ascent(self):
         """
         Calculate the unique ascent bonus for each ascent if applicable.
-
-        Returns:
-            pandas.DataFrame: A DataFrame with the unique ascent bonus for
-                                ascent applied if applicable.
         """
         # Group by route name and count the number of unique ascents
         ascent_counts = self.scoring_table.groupby(
@@ -181,98 +163,29 @@ class ScoreCalculator():
 
         return self.aggregate_table
 
-    def leaderboard_mode(self):
+    def calc_master_grade(self, grade: str):
         """
-        Present the user with different leaderboard options and display the
-        selected leaderboard.
+        Calculates the master grade table (on demand) by filtering
+        for the supplied grade and counting number of ascents.
+
+        Args:
+            grade (str): The supplied grade to filter on.
+
+        Returns:
+            pandas.Dataframe: A table with the count of ascents for the
+                                applicable grade grouped by climber.
         """
-        # parse aggregate table in variable for readability
-        agg_table = self.aggregate_table
+        # filter the scoring table based on that grade
+        master_grade_table = \
+            self.scoring_table.loc[
+                self.scoring_table['Grade'] == grade]
+        # group by the climber and count the ascents per that grade
+        master_grade_table = master_grade_table.groupby(
+            'Climber Name').size().reset_index(
+                name=f'Num of {grade} Ascents'
+        ).set_index('Climber Name')
 
-        # Dictionary to map user choices to leaderboard columns and
-        # descriptions
-        leaderboard_options = {
-            '1': ('Total Score', 'Overall leaderboard - ranks climbers '
-                  'after summing up the Base Points based on grade (double '
-                  'points for flash), Volume Score and Unique Ascent Score.'),
-            '2': ('Volume Score', 'Volume leaderboard - ranks climbers based '
-                  'on number of ascents counting 25 points every 5 ascents.'),
-            '3': ('Unique Ascent Score', 'Unique Ascents leaderboard - ranks '
-                  'climbers by only counting unique ascents and awarding for'
-                  'double the normal base points for the grade.')
-        }
-
-        # keep looping until user decides to exit
-        while True:
-            # Present the options to the user
-            console.print("\nPlease choose a leaderboard to view or type "
-                          "'help' for more information:",
-                          style="bold cyan")
-            console.print("1 - Total Score leaderboard", style="bold cyan")
-            console.print("2 - Volume leaderboard", style="bold cyan")
-            console.print("3 - Unique Ascents leaderboard", style="bold cyan")
-            console.print("4 - Master Grade leaderboard", style="bold cyan")
-            console.print("5 - Exit", style="bold cyan")
-
-            choice = Prompt.ask("[bold cyan]Enter your choice (1-5)").strip()
-
-            # if choice is 1, 2 or 3
-            if choice in leaderboard_options:
-                # Clear the terminal
-                clear()
-                # process the leaderboard
-                lead_option, description = leaderboard_options[choice]
-                leaderboard = rank_leaderboard(agg_table, lead_option)
-                # display the leaderboard
-                display_table(description, leaderboard)
-
-            # Grade leaderboard
-            elif choice == '4':
-                # clear the terminal
-                clear()
-                # ask user to input a grade
-                grade = Prompt.ask("[bold cyan]"
-                                   "Enter the grade (e.g., 3, 6A, 9A): "
-                                   ).strip().upper()
-                # filter the scoring table based on that grade
-                grade_leaderboard = \
-                    self.scoring_table.loc[
-                        self.scoring_table['Grade'] == grade]
-                # group by the climber and count the ascents per that grade
-                grade_leaderboard = grade_leaderboard.groupby(
-                    'Climber Name').size().reset_index(
-                        name=f'Num of {grade} Ascents'
-                ).set_index('Climber Name')
-                # sort and rank the leaderboard
-                grade_leaderboard = rank_leaderboard(
-                    grade_leaderboard[f'Num of {grade} Ascents'],
-                    f'Num of {grade} Ascents'
-                )
-                # display the leaderboard
-                display_table(f"\nMaster Grade Leaderboard for {grade}",
-                              leaderboard)
-
-            # Exit the loop
-            elif choice == '5':
-                clear()
-                console.print("\nExiting...\n", style="bold red")
-                break
-
-            # display help options
-            elif choice == 'help':
-                clear()
-                show_help()
-
-            # Invalidate choice
-            else:
-                clear()
-                console.print(f"\nInvalid choice. You've entered '{choice}'."
-                              " Please enter a number between 1 and 5.\n",
-                              style="bold red")
-
-            # introduce slight delay to allow user to view output before
-            # prompting again
-            sleep(1)
+        return master_grade_table
 
     def calculate_scores(self):
         """
