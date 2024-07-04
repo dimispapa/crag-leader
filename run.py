@@ -123,7 +123,14 @@ def leaderboard_mode(agg_table: pd.DataFrame,
             clear()
             # process the leaderboard
             lead_option, description = leaderboard_options[choice]
-            leaderboard = rank_leaderboard(agg_table, lead_option)
+            # if total score was chosen, then include all cols
+            if choice == '1':
+                leaderboard = rank_leaderboard(agg_table, lead_option)
+            # if not include just the relevant
+            else:
+                leaderboard = rank_leaderboard(agg_table[lead_option],
+                                               lead_option)
+
             # display the leaderboard
             display_table(description, leaderboard)
 
