@@ -30,7 +30,7 @@ def display_table(title: str, leaderboard: DataFrame):
     # add two empty lines
     console.print("\n\n")
     # create a table with title or description
-    table = Table(title=title, show_lines=True, expand=True)
+    table = Table(title=title, show_lines=True)
     # add columns to the table
     table.add_column("Climber Name", justify="right")  # add index name
     for col in leaderboard.columns:
