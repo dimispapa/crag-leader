@@ -5,15 +5,15 @@ Imports the necessary classes/functions from the following modules:
 - gsheets.py
 - scraper.py
 """
+from time import sleep
 import pandas as pd
-from gspread import WorksheetNotFound, SpreadsheetNotFound, exceptions
 from rich.prompt import Prompt
-from modules.rich_utils import console, progress
-from modules.scraper import Scraper
-from modules.crag import Crag
+from gspread import exceptions
+from modules.rich_utils import console, progress, display_table, show_help
 from modules.gsheets import GoogleSheetsClient
-from modules.score import ScoreCalculator
-from modules.helper import clear, welcome_msg
+from modules.score import ScoreCalculator, calc_master_grade
+from modules.helper import (scrape_data, retrieve_data, clear, welcome_msg,
+                            rank_leaderboard)
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
@@ -34,137 +34,6 @@ CREDS_FILE = "creds.json"
 
 # Create an instance of GoogleSheetsClient
 GSC = GoogleSheetsClient(CREDS_FILE, SCOPE)
-
-
-def compile_data(crag: Crag):
-    """
-    Compile data from a Crag instance into pandas DataFrames for boulders,
-    routes, and ascents.
-
-    Args:
-        crag (Crag): An instance of the Crag class containing the scraped data.
-
-    Returns:
-        tuple: A tuple containing three pandas DataFrames:
-                (boulder_data, route_data, ascent_data).
-    """
-    # Create a DataFrame for boulders with their names, URLs,
-    # and lists of associated routes
-    boulder_data = pd.DataFrame([(b.name,
-                                  b.url,
-                                  [route.name for route in b.routes])
-                                 for b in crag.boulders],
-                                columns=["Boulder Name",
-                                         "Boulder URL",
-                                         "Route List"])
-
-    # Initialize lists to hold route and ascent data
-    route_data = []
-    ascent_data = []
-
-    # Iterate through each boulder in the crag
-    for boulder in crag.boulders:
-        # Iterate through each route in the current boulder
-        for route in boulder.routes:
-            # Append route information to route_data list
-            route_data.append(
-                (route.name,
-                 boulder.name,
-                 route.url,
-                 route.grade,
-                 route.ascents,
-                 route.rating))
-            # Iterate through each ascent log in the current route
-            for ascent in route.ascent_log:
-                # Append ascent information to ascent_data list
-                ascent_data.append(
-                    (route.name,
-                     route.grade,
-                     boulder.name,
-                     ascent['climber_name'],
-                     ascent['ascent_type'],
-                     ascent['ascent_date'].strftime('%Y-%m-%d')))
-
-    # Create DataFrame for route data
-    route_data = pd.DataFrame(
-        route_data,
-        columns=["Route Name",
-                 "Boulder Name",
-                 "Route URL",
-                 "Grade",
-                 "Ascents",
-                 "Rating"])
-
-    # Create DataFrame for ascent data
-    ascent_data = pd.DataFrame(
-        ascent_data,
-        columns=["Route Name",
-                 "Grade",
-                 "Boulder Name",
-                 "Climber Name",
-                 "Ascent Type",
-                 "Ascent Date"])
-
-    return boulder_data, route_data, ascent_data
-
-
-def scrape_data():
-    """
-    The main application function controlling the workflow and
-    executing the imported classes and functions as required.
-    """
-    # Initialize a scraper instance and store data in an object
-    scraper = Scraper(HEADERS)
-    crag = Crag(CRAG_URL, scraper)
-    console.print("\nCrag successfully scraped!\n", style="bold green")
-
-    # prepare data for google sheets
-    console.print("\nCompiling data to write to google sheets ...\n",
-                  style="bold yellow")
-    boulder_data, route_data, ascent_data = compile_data(crag)
-
-    # write data to gsheet
-    console.print("\nWriting data to google sheets ...\n", style="bold yellow")
-    GSC.write_data_to_sheet('data', 'boulders', boulder_data)
-    GSC.write_data_to_sheet('data', 'routes', route_data)
-    GSC.write_data_to_sheet('data', 'ascents', ascent_data)
-    GSC.update_timestamp('data')
-    console.print("\nFinished writing data to google sheets ...\n",
-                  style="bold green")
-
-
-def retrieve_data():
-    """
-    Retrieve existing data from Google Sheets and parse into dataframes.
-
-    Returns:
-        tuple: A tuple containing three pandas DataFrames:
-                (boulder_data, route_data, ascent_data).
-    """
-    console.print("Retrieving data...\n", style="bold yellow")
-    # Retrieve data from worksheets
-    try:
-        boulder_data = pd.DataFrame(
-            GSC.get_sheet_data('data', 'boulders'))
-        route_data = pd.DataFrame(
-            GSC.get_sheet_data('data', 'routes'))
-        ascent_data = pd.DataFrame(
-            GSC.get_sheet_data('data', 'ascents'))
-
-    except WorksheetNotFound:
-        return console.print('Error: The data does '
-                             'not exist. Please choose the "scrape" option to '
-                             'retrieve data from 27crags.\n', style="bold red")
-
-    except SpreadsheetNotFound:
-        return console.print('Error: The Google Sheet file '
-                             'does not exist, please create a Google sheet '
-                             'file with name "data" and then choose '
-                             'to "scrape".\n', style="bold red")
-
-    console.print("\nData retrieval completed.\n", style="bold green")
-
-    return boulder_data, route_data, ascent_data
 
 
 def get_user_choice():
@@ -215,6 +84,98 @@ def get_user_choice():
             return 'scrape' if choice == '1' else 'retrieve'
 
 
+def leaderboard_mode(agg_table: pd.DataFrame):
+    """
+    Present the user with different leaderboard options and display the
+    selected leaderboard.
+    """
+    # Dictionary to map user choices to leaderboard columns and
+    # descriptions
+    leaderboard_options = {
+        '1': ('Total Score', 'Overall leaderboard - ranks climbers '
+              'after summing up the Base Points based on grade (double '
+              'points for flash), Volume Score and Unique Ascent Score.'),
+        '2': ('Volume Score', 'Volume leaderboard - ranks climbers based '
+              'on number of ascents counting 25 points every 5 ascents.'),
+        '3': ('Unique Ascent Score', 'Unique Ascents leaderboard - ranks '
+              'climbers by only counting unique ascents and awarding for'
+              'double the normal base points for the grade.')
+    }
+
+    # keep looping until user decides to exit
+    while True:
+        # Present the options to the user
+        console.print("\nPlease choose a leaderboard to view or type "
+                      "'help' for more information:",
+                      style="bold cyan")
+        console.print("1 - Total Score leaderboard", style="bold cyan")
+        console.print("2 - Volume leaderboard", style="bold cyan")
+        console.print("3 - Unique Ascents leaderboard", style="bold cyan")
+        console.print("4 - Master Grade leaderboard", style="bold cyan")
+        console.print("5 - Exit", style="bold cyan")
+
+        choice = Prompt.ask("[bold cyan]Enter your choice (1-5)").strip()
+
+        # if choice is 1, 2 or 3
+        if choice in leaderboard_options:
+            # Clear the terminal
+            clear()
+            # process the leaderboard
+            lead_option, description = leaderboard_options[choice]
+            leaderboard = rank_leaderboard(agg_table, lead_option)
+            # display the leaderboard
+            display_table(description, leaderboard)
+
+        # Master Grade leaderboard
+        elif choice == '4':
+            # clear the terminal
+            clear()
+            # ask user to input a grade
+            grade = Prompt.ask("[bold cyan]"
+                               "Enter the grade (e.g., 3, 6A, 9A): "
+                               ).strip().upper()
+            # calc the master grade score
+            grade_leaderboard = calc_master_grade(grade)
+
+            # sort and rank the leaderboard
+            grade_leaderboard = rank_leaderboard(
+                grade_leaderboard[f'Num of {grade} Ascents'],
+                f'Num of {grade} Ascents'
+            )
+            # display the leaderboard
+            display_table(f"\nMaster Grade Leaderboard for {grade}",
+                          leaderboard)
+
+        # Exit the loop and leaderboard menu
+        elif choice == '5':
+            clear()
+            console.print("\nExiting the leaderboard menu...\n",
+                          style="bold red")
+            # slight delay
+            sleep(1)
+            # clear terminal and run the main func again
+            clear()
+            main()
+            # break the loop
+            break
+
+        # display help options
+        elif choice == 'help':
+            clear()
+            show_help()
+
+        # Invalidate choice
+        else:
+            clear()
+            console.print(f"\nInvalid choice. You've entered '{choice}'."
+                          " Please enter a number between 1 and 5.\n",
+                          style="bold red")
+
+        # introduce slight delay to allow user to view output before
+        # prompting again
+        sleep(1)
+
+
 def main():
     """
     The main application function, prompting the user,
@@ -240,10 +201,10 @@ def main():
     if choice == 'scrape':
         # open the progress context manager to track scraping
         with progress:
-            scrape_data()
+            scrape_data(HEADERS, CRAG_URL, GSC)
         # retrieve data
         boulder_data, route_data, ascent_data = \
-            retrieve_data()
+            retrieve_data(GSC)
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
@@ -253,7 +214,7 @@ def main():
     # and simply retrieve the existing data on google drive
     elif choice == 'retrieve':
         boulder_data, route_data, ascent_data = \
-            retrieve_data()
+            retrieve_data(GSC)
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
@@ -262,12 +223,12 @@ def main():
     # initialize the score calculator class and calculate scores
     console.print("\nCalculating scores ...\n", style="bold yellow")
     score_calculator = ScoreCalculator(GSC, ascent_data)
-    score_calculator.calculate_scores()
+    aggregate_table = score_calculator.calculate_scores()
     console.print("\nScores have been calculated!\n", style="bold green")
 
     # prompt the user to choose the leaderboard
     # before printing to the terminal
-    score_calculator.leaderboard_mode()
+    leaderboard_mode(aggregate_table)
 
 
 try:

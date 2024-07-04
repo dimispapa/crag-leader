@@ -2,7 +2,10 @@
 Module contains helper functions used in other modules.
 """
 import os
-from pandas import DataFrame, Series
+import pandas as pd
+from gspread import WorksheetNotFound, SpreadsheetNotFound, client
+from modules.scraper import Scraper
+from modules.crag import Crag
 from modules.rich_utils import console
 
 
@@ -14,7 +17,8 @@ def clear():
     console.clear()
 
 
-def rank_leaderboard(leaderboard: DataFrame or Series, ranking_column: str):
+def rank_leaderboard(leaderboard: pd.DataFrame or pd.Series,
+                     ranking_column: str):
     """
     Sort and rank the leaderboard based on the selected column.
 
@@ -27,12 +31,12 @@ def rank_leaderboard(leaderboard: DataFrame or Series, ranking_column: str):
     """
     # apply rank() method to the leaderboard
     # if it's a dataframe
-    if isinstance(leaderboard, DataFrame):
+    if isinstance(leaderboard, pd.DataFrame):
         leaderboard['Rank'] = \
             leaderboard[ranking_column].rank(
                 method='min', ascending=False).astype(int)
     # if it's a series
-    elif isinstance(leaderboard, Series):
+    elif isinstance(leaderboard, pd.Series):
         # Create a DataFrame from the Series
         leaderboard = leaderboard.to_frame()
         leaderboard['Rank'] = \
@@ -60,3 +64,134 @@ def welcome_msg():
                   "designed for boulderers who log their ascents on 27crags, "
                   "on the Inia & Droushia crag in Cyprus!"
                   "\n", style="bold cyan")
+
+
+def compile_data(crag: Crag):
+    """
+    Compile data from a Crag instance into pandas DataFrames for boulders,
+    routes, and ascents.
+
+    Args:
+        crag (Crag): An instance of the Crag class containing the scraped data.
+
+    Returns:
+        tuple: A tuple containing three pandas DataFrames:
+                (boulder_data, route_data, ascent_data).
+    """
+    # Create a DataFrame for boulders with their names, URLs,
+    # and lists of associated routes
+    boulder_data = pd.DataFrame([(b.name,
+                                  b.url,
+                                  [route.name for route in b.routes])
+                                 for b in crag.boulders],
+                                columns=["Boulder Name",
+                                         "Boulder URL",
+                                         "Route List"])
+
+    # Initialize lists to hold route and ascent data
+    route_data = []
+    ascent_data = []
+
+    # Iterate through each boulder in the crag
+    for boulder in crag.boulders:
+        # Iterate through each route in the current boulder
+        for route in boulder.routes:
+            # Append route information to route_data list
+            route_data.append(
+                (route.name,
+                 boulder.name,
+                 route.url,
+                 route.grade,
+                 route.ascents,
+                 route.rating))
+            # Iterate through each ascent log in the current route
+            for ascent in route.ascent_log:
+                # Append ascent information to ascent_data list
+                ascent_data.append(
+                    (route.name,
+                     route.grade,
+                     boulder.name,
+                     ascent['climber_name'],
+                     ascent['ascent_type'],
+                     ascent['ascent_date'].strftime('%Y-%m-%d')))
+
+    # Create DataFrame for route data
+    route_data = pd.DataFrame(
+        route_data,
+        columns=["Route Name",
+                 "Boulder Name",
+                 "Route URL",
+                 "Grade",
+                 "Ascents",
+                 "Rating"])
+
+    # Create DataFrame for ascent data
+    ascent_data = pd.DataFrame(
+        ascent_data,
+        columns=["Route Name",
+                 "Grade",
+                 "Boulder Name",
+                 "Climber Name",
+                 "Ascent Type",
+                 "Ascent Date"])
+
+    return boulder_data, route_data, ascent_data
+
+
+def scrape_data(headers: dict, crag_url: str, gsc: client):
+    """
+    The main application function controlling the workflow and
+    executing the imported classes and functions as required.
+    """
+    # Initialize a scraper instance and store data in an object
+    scraper = Scraper(headers)
+    crag = Crag(crag_url, scraper)
+    console.print("\nCrag successfully scraped!\n", style="bold green")
+
+    # prepare data for google sheets
+    console.print("\nCompiling data to write to google sheets ...\n",
+                  style="bold yellow")
+    boulder_data, route_data, ascent_data = compile_data(crag)
+
+    # write data to gsheet
+    console.print("\nWriting data to google sheets ...\n", style="bold yellow")
+    gsc.write_data_to_sheet('data', 'boulders', boulder_data)
+    gsc.write_data_to_sheet('data', 'routes', route_data)
+    gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+    gsc.update_timestamp('data')
+    console.print("\nFinished writing data to google sheets ...\n",
+                  style="bold green")
+
+
+def retrieve_data(gsc: client):
+    """
+    Retrieve existing data from Google Sheets and parse into dataframes.
+
+    Returns:
+        tuple: A tuple containing three pandas DataFrames:
+                (boulder_data, route_data, ascent_data).
+    """
+    console.print("Retrieving data...\n", style="bold yellow")
+    # Retrieve data from worksheets
+    try:
+        boulder_data = pd.DataFrame(
+            gsc.get_sheet_data('data', 'boulders'))
+        route_data = pd.DataFrame(
+            gsc.get_sheet_data('data', 'routes'))
+        ascent_data = pd.DataFrame(
+            gsc.get_sheet_data('data', 'ascents'))
+
+    except WorksheetNotFound:
+        return console.print('Error: The data does '
+                             'not exist. Please choose the "scrape" option to '
+                             'retrieve data from 27crags.\n', style="bold red")
+
+    except SpreadsheetNotFound:
+        return console.print('Error: The Google Sheet file '
+                             'does not exist, please create a Google sheet '
+                             'file with name "data" and then choose '
+                             'to "scrape".\n', style="bold red")
+
+    console.print("\nData retrieval completed.\n", style="bold green")
+
+    return boulder_data, route_data, ascent_data
