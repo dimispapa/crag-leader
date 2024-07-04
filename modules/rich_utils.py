@@ -55,7 +55,7 @@ def show_help():
                                     ascents, earning double base points for
                                     the grade.
     4 - Master Grade leaderboard: Display rankings per the chosen grade.
-    5 - Exit: Exit the application.
+    5 - Exit: Exit the menu back to the starting screen.
 
     Enter the number corresponding to the option you want to select.
     """
