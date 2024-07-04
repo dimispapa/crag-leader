@@ -8,7 +8,7 @@ Imports the necessary classes/functions from the following modules:
 
 import asyncio
 import pandas as pd
-from gspread import WorksheetNotFound, SpreadsheetNotFound
+from gspread import WorksheetNotFound, SpreadsheetNotFound, exceptions
 from rich.prompt import Prompt
 from modules.rich_utils import console, progress
 from modules.scraper import Scraper
@@ -271,6 +271,11 @@ async def main():
     # before printing to the terminal
     score_calculator.leaderboard_mode()
 
+try:
+    if __name__ == "__main__":
+        asyncio.run(main())
 
-if __name__ == "__main__":
-    asyncio.run(main())
+except exceptions.APIError as e:
+    console.print(
+        f"APIError: {e}. Please try reloading the page and app.",
+        style="bold red")
