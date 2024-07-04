@@ -25,8 +25,10 @@ def display_table(title: str, leaderboard: DataFrame):
         leaderboard (pandas.DataFrame): The DataFrame containing the
                                         leaderboard data.
     """
+    # clear the terminal
+    console.clear()
     # create a table with title or description
-    table = Table(title=title)
+    table = Table(title=title, show_lines=True, expand=True)
     # add columns to the table
     table.add_column("Climber Name", justify="right")  # add index name
     for col in leaderboard.columns:
