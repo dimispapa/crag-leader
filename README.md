@@ -52,7 +52,7 @@ This application was designed with the purpose of presenting the user with vario
 ### App Goals
 
 - Gamify climbing and bouldering by generating friendly competition between climbers and increase motivation for climbing and maintaining an online log.
-- Allow climbers to have visibility of their standing and the levels accross the community.
+- Allow climbers to have visibility of their standings, progress and the levels accross the community.
 
 ### Audience
 
