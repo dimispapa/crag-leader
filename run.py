@@ -11,7 +11,7 @@ from rich.prompt import Prompt
 from gspread import exceptions
 from modules.rich_utils import console, progress, display_table, show_help
 from modules.gsheets import GoogleSheetsClient
-from modules.score import ScoreCalculator, calc_master_grade
+from modules.score import ScoreCalculator
 from modules.helper import (scrape_data, retrieve_data, clear, welcome_msg,
                             rank_leaderboard)
 
@@ -84,7 +84,8 @@ def get_user_choice():
             return 'scrape' if choice == '1' else 'retrieve'
 
 
-def leaderboard_mode(agg_table: pd.DataFrame):
+def leaderboard_mode(agg_table: pd.DataFrame,
+                     calc_master_grade: ScoreCalculator.calc_master_grade):
     """
     Present the user with different leaderboard options and display the
     selected leaderboard.
@@ -227,8 +228,10 @@ def main():
     console.print("\nScores have been calculated!\n", style="bold green")
 
     # prompt the user to choose the leaderboard
-    # before printing to the terminal
-    leaderboard_mode(aggregate_table)
+    # pass the calc_master_grade method of the score_calculator instance
+    # to be used if the user chooses option 4
+    leaderboard_mode(aggregate_table,
+                     score_calculator.calc_master_grade)
 
 
 try:
