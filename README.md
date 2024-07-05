@@ -79,7 +79,27 @@ UX is improved through the use of colour and progress bars, to communicate infor
 
 ### Process Flow Diagrams
 
-The following flowcharts were created using [Overleaf](https://www.overleaf.com/) to visualise the logical flow of the application, drilling down to specific classes, methods or functions were required.
+The following flowcharts were created using [Overleaf](https://www.overleaf.com/) to visualise the logical flow of the application.
 
-- Main Function
+- The structure and relationship between the user-created python modules reached its current state, as a result of continuous refactoring of code as the application grew and developed. Breaking it down into smaller and related elements of classes, functions and modules as the application was getting bigger, made it easier to reuse, debug, test and maintain.
+![Python Relationship](documentation/diagrams/py-relation.png)
+
+Drilling down further into specific classes, methods and functions:
+
+- Main Functionality
 ![Main Function](documentation/diagrams/main-diagram.png)
+
+- Google Sheets API Client
+![Google Sheets API](documentation/diagrams/gsheets-diagram.png)
+
+- Retrieve / Scrape Functionality
+![Retrieve Scrape](documentation/diagrams/retrieve-scrape-diagram.png)
+
+- Scraper Functionality
+![Scraper Classes](documentation/diagrams/scaper-classes-diagram.png)
+
+- Score Calculator Class
+![Score Calculator Class](documentation/diagrams/score-diagram.png)
+
+- Leaderboard Mode Functionality
+![Leaderboard Mode](documentation/diagrams/leaderboard-diagram.png)
