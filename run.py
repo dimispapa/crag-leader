@@ -58,7 +58,7 @@ def get_user_choice():
         # prompt user choice.
         # Case-insesitive and remove leading/trailing spaces
         choice = Prompt.ask(
-            f"[bold cyan]\nCrag data has been last updated on: {timestamp}.\n"
+            f"[bold cyan]Crag data has been last updated on: {timestamp}.\n"
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
             "(Please type 1 for 'scraping latest data' or "

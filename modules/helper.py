@@ -4,6 +4,7 @@ Module contains helper functions used in other modules.
 import os
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound, client
+import pyfiglet
 from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.rich_utils import console
@@ -51,19 +52,13 @@ def welcome_msg():
     """
     Prints the welcome message and ASCII art to the console.
     """
-    ascii_art = r"""
-                _                 _     _
-                | |               | |   | |
-                | |__   ___  _   _| | __| | ___ _ __
-                | '_ \ / _ \| | | | |/ _` |/ _ \ '__|
-                | |_) | (_) | |_| | | (_| |  __/ |
-                |_.__/ \___/ \__,_|_|\__,_|\___|_|
-                """
+    ascii_art = pyfiglet.figlet_format("Crag Leader", font='doom')
+    console.print(ascii_art, style="bold green")
+
     console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
                   "designed for boulderers who log their ascents on 27crags, "
                   "on the Inia & Droushia crag in Cyprus!"
                   "\n", style="bold cyan")
-    console.print(ascii_art, style="bold green")
 
 
 def compile_data(crag: Crag):

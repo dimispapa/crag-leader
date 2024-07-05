@@ -103,3 +103,7 @@ Drilling down further into specific classes, methods and functions:
 
 - Leaderboard Mode Functionality
 ![Leaderboard Mode](documentation/diagrams/leaderboard-diagram.png)
+
+## Design
+
+### Colour
