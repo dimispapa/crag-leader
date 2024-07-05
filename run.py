@@ -277,8 +277,12 @@ try:
     if __name__ == "__main__":
         main()
 
+# in case of an APIError, will attempt to reload the app
 except exceptions.APIError as e:
     clear()
     console.print(
-        f"APIError: {e}. Please try reloading the page and app.",
+        f"APIError: {e}. Attempting to reload app...",
         style="bold red")
+    sleep(3)
+    clear()
+    main()
