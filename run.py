@@ -85,7 +85,7 @@ def get_user_choice():
 
 
 def leaderboard_mode(agg_table: pd.DataFrame,
-                     calc_master_grade: ScoreCalculator.calc_master_grade):
+                     score_calculator: ScoreCalculator):
     """
     Present the user with different leaderboard options and display the
     selected leaderboard.
@@ -138,21 +138,43 @@ def leaderboard_mode(agg_table: pd.DataFrame,
         elif choice == '4':
             # clear the terminal
             clear()
-            # ask user to input a grade
-            grade = Prompt.ask("[bold cyan]"
-                               "Enter the grade (e.g., 3, 6A, 9A): "
-                               ).strip().upper()
-            # calc the master grade score
-            grade_leaderboard = calc_master_grade(grade)
-
-            # sort and rank the leaderboard
-            grade_leaderboard = rank_leaderboard(
-                grade_leaderboard[f'Num of {grade} Ascents'],
-                f'Num of {grade} Ascents'
-            )
-            # display the leaderboard
-            display_table(f"\nMaster Grade Leaderboard for {grade}",
-                          leaderboard)
+            # get available grade options
+            grade_options = \
+                score_calculator.scoring_table['Grade'].unique().sort()
+            # start another nested while loop to repeat running this until
+            # user opts to go back to main leaderboard menu
+            while True:
+                # ask user to input a grade
+                grade = Prompt.ask("[bold cyan]"
+                                   "Enter the grade. Available grade options "
+                                   f"in this crag\n: {grade_options}\n"
+                                   "Type '0' to go back to the main "
+                                   "leaderboard menu.\n"
+                                   ).strip().upper()
+                # check user grade option
+                if grade in grade_options:
+                    # calc the master grade score
+                    grade_leaderboard = \
+                        score_calculator.calc_master_grade(grade)
+                    # sort and rank the leaderboard
+                    grade_leaderboard = rank_leaderboard(
+                        grade_leaderboard[f'Num of {grade} Ascents'],
+                        f'Num of {grade} Ascents'
+                    )
+                    # display the leaderboard
+                    display_table(f"\nMaster Grade Leaderboard for {grade}",
+                                  leaderboard)
+                # option to go back to main leaderboard menu
+                elif grade == '0':
+                    break
+                # Invalidate choice
+                else:
+                    clear()
+                    console.print(f"\nInvalid grade. You've entered '{grade}'."
+                                  " Please enter a grade from the following "
+                                  f"options: {grade_options}, or type '0' to "
+                                  "go back to the main leaderboard menu.\n",
+                                  style="bold red")
 
         # Exit the loop and leaderboard menu
         elif choice == '5':
@@ -239,7 +261,7 @@ def main():
     # pass the calc_master_grade method of the score_calculator instance
     # to be used if the user chooses option 4
     leaderboard_mode(aggregate_table,
-                     score_calculator.calc_master_grade)
+                     score_calculator)
 
 
 try:
