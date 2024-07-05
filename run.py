@@ -139,20 +139,22 @@ def leaderboard_mode(agg_table: pd.DataFrame,
             # clear the terminal
             clear()
             # get available grade options
-            grade_options = \
-                score_calculator.scoring_table['Grade'].unique().sort()
+            unique_grades = \
+                score_calculator.scoring_table['Grade'].unique()
+            grade_list = [str(g) for g in unique_grades]
+            grade_list.sort()
             # start another nested while loop to repeat running this until
             # user opts to go back to main leaderboard menu
             while True:
                 # ask user to input a grade
                 grade = Prompt.ask("[bold cyan]"
                                    "Enter the grade. Available grade options "
-                                   f"in this crag\n: {grade_options}\n"
+                                   f"in this crag:\n{grade_list}\n"
                                    "Type '0' to go back to the main "
                                    "leaderboard menu.\n"
                                    ).strip().upper()
                 # check user grade option
-                if grade in grade_options:
+                if grade in grade_list:
                     # calc the master grade score
                     grade_leaderboard = \
                         score_calculator.calc_master_grade(grade)
@@ -162,8 +164,9 @@ def leaderboard_mode(agg_table: pd.DataFrame,
                         f'Num of {grade} Ascents'
                     )
                     # display the leaderboard
+                    clear()
                     display_table(f"\nMaster Grade Leaderboard for {grade}",
-                                  leaderboard)
+                                  grade_leaderboard)
                 # option to go back to main leaderboard menu
                 elif grade == '0':
                     break
@@ -172,9 +175,12 @@ def leaderboard_mode(agg_table: pd.DataFrame,
                     clear()
                     console.print(f"\nInvalid grade. You've entered '{grade}'."
                                   " Please enter a grade from the following "
-                                  f"options: {grade_options}, or type '0' to "
+                                  f"options: {grade_list}, or type '0' to "
                                   "go back to the main leaderboard menu.\n",
                                   style="bold red")
+                # introduce slight delay to allow user to realise that
+                # the output is there before prompting again
+                sleep(1)
 
         # Exit the loop and leaderboard menu
         elif choice == '5':
@@ -202,8 +208,8 @@ def leaderboard_mode(agg_table: pd.DataFrame,
                           "or type 'help' for more info.\n",
                           style="bold red")
 
-        # introduce slight delay to allow user to view output before
-        # prompting again
+        # introduce slight delay to allow user to realise that
+        # the output is there before prompting again
         sleep(1)
 
 
@@ -232,10 +238,10 @@ def main():
     if choice == 'scrape':
         # open the progress context manager to track scraping
         with progress:
-            scrape_data(HEADERS, CRAG_URL, GSC)
-        # retrieve data
-        boulder_data, route_data, ascent_data = \
-            retrieve_data(GSC)
+            # scrape and return data
+            boulder_data, route_data, ascent_data = \
+                scrape_data(HEADERS, CRAG_URL, GSC)
+
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
