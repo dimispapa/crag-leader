@@ -25,8 +25,8 @@ def display_table(title: str, leaderboard: DataFrame):
         leaderboard (pandas.DataFrame): The DataFrame containing the
                                         leaderboard data.
     """
-    # add two empty lines
-    console.print("\n\n")
+    # add an empty line before
+    console.print("\n")
     # create a table with title or description
     table = Table(title=title, show_lines=True)
     # add columns to the table
@@ -38,6 +38,8 @@ def display_table(title: str, leaderboard: DataFrame):
         table.add_row(str(index), *[str(value) for value in row])
     # display the leaderboard
     console.print(table)
+    # add an empty line after
+    console.print("\n")
 
 
 def show_help():
