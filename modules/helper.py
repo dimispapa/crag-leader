@@ -153,6 +153,11 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
                   style="bold yellow")
     boulder_data, route_data, ascent_data = compile_data(crag)
 
+    # cast the Grade col to string to ensure consistency when
+    # working with grades later
+    route_data['Grade'] = route_data['Grade'].astype('str')
+    ascent_data['Grade'] = ascent_data['Grade'].astype('str')
+
     # write data to gsheet
     console.print("\nWriting data to google sheets ...\n", style="bold yellow")
     gsc.write_data_to_sheet('data', 'boulders', boulder_data)
@@ -161,6 +166,8 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     gsc.update_timestamp('data')
     console.print("\nFinished writing data to google sheets ...\n",
                   style="bold green")
+
+    return boulder_data, route_data, ascent_data
 
 
 def retrieve_data(gsc: client):
@@ -180,6 +187,11 @@ def retrieve_data(gsc: client):
             gsc.get_sheet_data('data', 'routes'))
         ascent_data = pd.DataFrame(
             gsc.get_sheet_data('data', 'ascents'))
+
+        # cast the Grade col to string to ensure consistency when
+        # working with grades later
+        route_data['Grade'] = route_data['Grade'].astype('str')
+        ascent_data['Grade'] = ascent_data['Grade'].astype('str')
 
     except WorksheetNotFound:
         return console.print('Error: The data does '
