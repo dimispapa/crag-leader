@@ -5,6 +5,7 @@ extract information regarding the ascents logged relevant to a Route instance.
 from datetime import datetime
 from bs4 import BeautifulSoup
 from modules.scraper import Scraper
+from modules.rich_utils import console
 
 
 class Route:
@@ -150,6 +151,8 @@ class Route:
                     continue
 
         else:
-            print(f'no logs for route: {self.name}')
+            console.clear()
+            console.print(
+                f'no logs for route: {self.name}', style="bold yellow")
 
         return ascent_log

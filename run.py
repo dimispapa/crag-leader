@@ -58,7 +58,7 @@ def get_user_choice():
         # prompt user choice.
         # Case-insesitive and remove leading/trailing spaces
         choice = Prompt.ask(
-            f"[bold cyan]Crag data has been last updated on: {timestamp}.\n"
+            f"[bold cyan]\nCrag data has been last updated on: {timestamp}.\n"
             "Do you want to scrape the latest data from 27crags or retrieve"
             " existing data? \n"
             "(Please type 1 for 'scraping latest data' or "
@@ -241,7 +241,7 @@ def main():
             # scrape and return data
             boulder_data, route_data, ascent_data = \
                 scrape_data(HEADERS, CRAG_URL, GSC)
-
+        clear()
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
@@ -252,15 +252,18 @@ def main():
     elif choice == 'retrieve':
         boulder_data, route_data, ascent_data = \
             retrieve_data(GSC)
+        clear()
         console.print(f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                       f"\n- {len(route_data)} Routes"
                       f"\n- {len(ascent_data)} Ascents\n",
                       style="bold green")
 
     # initialize the score calculator class and calculate scores
+    clear()
     console.print("\nCalculating scores ...\n", style="bold yellow")
     score_calculator = ScoreCalculator(GSC, ascent_data)
     aggregate_table = score_calculator.calculate_scores()
+    clear()
     console.print("\nScores have been calculated!\n", style="bold green")
 
     # prompt the user to choose the leaderboard
@@ -275,6 +278,7 @@ try:
         main()
 
 except exceptions.APIError as e:
+    clear()
     console.print(
         f"APIError: {e}. Please try reloading the page and app.",
         style="bold red")

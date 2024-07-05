@@ -59,11 +59,11 @@ def welcome_msg():
                 | |_) | (_) | |_| | | (_| |  __/ |
                 |_.__/ \___/ \__,_|_|\__,_|\___|_|
                 """
-    console.print(ascii_art, style="bold green")
     console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
                   "designed for boulderers who log their ascents on 27crags, "
                   "on the Inia & Droushia crag in Cyprus!"
                   "\n", style="bold cyan")
+    console.print(ascii_art, style="bold green")
 
 
 def compile_data(crag: Crag):
@@ -146,9 +146,11 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     # Initialize a scraper instance and store data in an object
     scraper = Scraper(headers)
     crag = Crag(crag_url, scraper)
+    console.clear()
     console.print("\nCrag successfully scraped!\n", style="bold green")
 
     # prepare data for google sheets
+    clear()
     console.print("\nCompiling data to write to google sheets ...\n",
                   style="bold yellow")
     boulder_data, route_data, ascent_data = compile_data(crag)
@@ -159,11 +161,13 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     ascent_data['Grade'] = ascent_data['Grade'].astype('str')
 
     # write data to gsheet
+    clear()
     console.print("\nWriting data to google sheets ...\n", style="bold yellow")
     gsc.write_data_to_sheet('data', 'boulders', boulder_data)
     gsc.write_data_to_sheet('data', 'routes', route_data)
     gsc.write_data_to_sheet('data', 'ascents', ascent_data)
     gsc.update_timestamp('data')
+    clear()
     console.print("\nFinished writing data to google sheets ...\n",
                   style="bold green")
 
@@ -178,6 +182,7 @@ def retrieve_data(gsc: client):
         tuple: A tuple containing three pandas DataFrames:
                 (boulder_data, route_data, ascent_data).
     """
+    clear()
     console.print("\nRetrieving data...\n", style="bold yellow")
     # Retrieve data from worksheets
     try:
@@ -194,16 +199,18 @@ def retrieve_data(gsc: client):
         ascent_data['Grade'] = ascent_data['Grade'].astype('str')
 
     except WorksheetNotFound:
+        clear()
         return console.print('Error: The data does '
                              'not exist. Please choose the "scrape" option to '
                              'retrieve data from 27crags.\n', style="bold red")
 
     except SpreadsheetNotFound:
+        clear()
         return console.print('Error: The Google Sheet file '
                              'does not exist, please create a Google sheet '
                              'file with name "data" and then choose '
                              'to "scrape".\n', style="bold red")
-
+    clear()
     console.print("\nData retrieval completed.\n", style="bold green")
 
     return boulder_data, route_data, ascent_data

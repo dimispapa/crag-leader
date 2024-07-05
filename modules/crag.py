@@ -40,6 +40,7 @@ class Crag:
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
+        console.clear()
         self.console.print("Please wait while the scraper is retrieving info "
                            f"from '{self.crag_url}' ...\n",
                            style="bold yellow")
@@ -54,6 +55,7 @@ class Crag:
             list: A list of Boulder instances.
         """
         # scrape parsed html content from url
+        console.clear()
         console.print(f'\nScraping boulder list from "{self.routelist_url} "'
                       'crag...\n', style="bold yellow")
         soup = self.scraper.get_html(self.routelist_url)
@@ -75,8 +77,10 @@ class Crag:
             # extract attributes from anchor element
             boulder_name = boulder_elem.find(
                 'div', attrs={'class': 'name'}).text.strip()
+            console.clear()
             console.print(
-                f'\nProcessing boulder info for "{boulder_name}" ...\n')
+                f'\nProcessing boulder info for "{boulder_name}" ...\n',
+                style="bold yellow")
             # concat the boulder url on the base url
             boulder_url = self.base_url + boulder_elem['href']
 
