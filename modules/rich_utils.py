@@ -63,4 +63,5 @@ def show_help():
 
     Enter the number corresponding to the option you want to select.
     """
+    console.clear()
     console.print(help_text, style="bold cyan")

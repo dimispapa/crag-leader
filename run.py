@@ -198,7 +198,6 @@ def leaderboard_mode(agg_table: pd.DataFrame,
 
         # display help options
         elif choice == 'help':
-            clear()
             show_help()
 
         # Invalidate choice
