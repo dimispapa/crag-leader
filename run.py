@@ -105,7 +105,6 @@ def leaderboard_mode(agg_table: pd.DataFrame,
 
     # keep looping until user decides to exit
     while True:
-        clear()
         # Present the options to the user
         console.print("\nPlease choose a leaderboard to view or type "
                       "'help' for more information:",
@@ -170,6 +169,7 @@ def leaderboard_mode(agg_table: pd.DataFrame,
                                   grade_leaderboard)
                 # option to go back to main leaderboard menu
                 elif grade == '0':
+                    clear()
                     break
                 # Invalidate choice
                 else:

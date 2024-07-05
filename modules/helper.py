@@ -4,7 +4,7 @@ Module contains helper functions used in other modules.
 import os
 import pandas as pd
 from gspread import WorksheetNotFound, SpreadsheetNotFound, client
-import pyfiglet
+from pyfiglet import figlet_format
 from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.rich_utils import console
@@ -52,7 +52,7 @@ def welcome_msg():
     """
     Prints the welcome message and ASCII art to the console.
     """
-    ascii_art = pyfiglet.figlet_format("Crag Leader", font='doom')
+    ascii_art = figlet_format("Crag Leader", font='doom')
     console.print(ascii_art, style="bold green")
 
     console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
