@@ -106,4 +106,13 @@ Drilling down further into specific classes, methods and functions:
 
 ## Design
 
-### Colour
+### Terminal Command-line interface (CLI)
+The CLI was enhanced with the use of the *rich* python library. We have used the following classes from this library, initialised centrally from the *rich_utils.py* module and passed on to other modules as needed: 
+  - **Console class**: Made use of the enhanced print method which allows the use of colour and emphasis. The following colours were used: 
+     - Cyan Bold: Welcome and menu messages.
+     - Yellow Bold: Progress updates.
+     - Red Bold: Error and exiting messages.
+     - Green: For the ASCII art welcome graphic.
+
+  - **Progress class**: Creates a visually appealing progress bar which is used during the running of the scraper to notify the user of progress, which normally takes 2-4 minutes depending on internet speed. A progress instance is initialised in the *rich_utils* module and passed over to the *run.py* file, where it is used with a context manager on when the *scrape_data* function is called. The progress instance is used in the *crag.py* module, by adding a task just before looping through the boulder elements. The progress bar is able to estimate a percentage completion and time-to-completion, by reference to the *len* of the boulder elements list and the advancing by one each time it loops through one boulder. An example progress bar is below:
+     - ![Progress Bar](documentation/screenshots/progess-bar.png)

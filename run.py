@@ -115,7 +115,8 @@ def leaderboard_mode(agg_table: pd.DataFrame,
         console.print("4 - Master Grade leaderboard", style="bold cyan")
         console.print("5 - Exit", style="bold cyan")
 
-        choice = Prompt.ask("[bold cyan]Enter your choice (1-5)").strip().lower()
+        choice = Prompt.ask("[bold cyan]Enter your choice (1-5)"
+                            ).strip().lower()
 
         # if choice is 1, 2 or 3
         if choice in leaderboard_options:
