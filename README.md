@@ -12,37 +12,6 @@ This app aims to process the scraped information and it is capable of displaying
 
 <br/>
 
-## Table of Contents
-
-- [Table of Contents](#table-of-contents)
-- [UX](#ux)
-  - [App Purpose](#app-purpose)
-  - [App Goals](#app-goals)
-  - [Audience](#audience)
-  - [Communication](#communication)
-  - [Current User Goals](#current-user-goals)
-  - [Future User Goals](#future-user-goals)
-- [Logic](#logic)
-  - [Process Flow Diagrams](#process-flow-diagrams)
-- [Design](#design)
-  - [Colour](#colour)
-  - [Existing Features](#existing-features)
-  - [Hidden Features](#hidden-features)
-  - [Future Features](#future-features)
-- [Testing](#testing)
-  - [Validator Testing](#validator-testing)
-  - [Fixed Bugs](#fixed-bugs)
-  - [Unfixed Bugs](#unfixed-bugs)
-- [Technologies Used](#technologies-used)
-  - [Main Languages Used](#main-languages-used)
-  - [Python Packages-Modules](#python-packages-modules)
-  - [Tools](#tools)
-- [Deployment](#deployment)
-  - [How to deploy](#how-to-deploy)
-  - [How to clone](#how-to-clone)
-- [Credits](#credits)
-- [Acknowledgements](#acknowledgements)
-
 ## UX
 
 ### App Purpose
@@ -106,7 +75,7 @@ Drilling down further into specific classes, methods and functions:
 
 ## Design
 
-### Terminal Command-line interface (CLI)
+### Command-line interface (CLI)
 The CLI was enhanced with the use of the *rich* python library. We have used the following classes from this library, initialised centrally from the *rich_utils.py* module and passed on to other modules as needed: 
   - **Console class**: Made use of the enhanced print method which allows the use of colour and emphasis. The following colours were used: 
      - Cyan Bold: Welcome and menu messages.
@@ -119,7 +88,71 @@ The CLI was enhanced with the use of the *rich* python library. We have used the
 
   - **Table class**: Used for displaying the leaderboards in a more visually-appealing table format instead of the simple print method. The *display_table* function was created in the *rich_utils* module which is reused for displaying the leaderboard tables in the *run* module.
 
+  -- **Prompt class**: This class was imported directly to the *run* module, as no modification or initialization was required. The method *ask* was used which is an enhanced *input* method which allows for user prompts with colour options.
+
 Furthermore, the ASCII art title "Crag Leader" on the welcome screen, was created using the python library *pyfiglet* and the font "doom" was chosen. The art was printed with green bold that works well with the black background and cyan bold of the welcome message, adding "electrifying" feel to the welcome screen.
 
+Finally, the terminal was modified slightly with small changes to the adapt to the needs of the application. The column and row sizes were increased in order to prevent the leaderboard tables from being cropped or not displaying optimally.
+
+### Current Features
+
+- **Welcome Screen**:
+This includes the first user prompt with choices being to either "scrape" the latest data from the 27crags website or "retrieve" the currently stored data on the google sheets backend. Notice the use of timestamps to notify the user when was the last time the data was updated to help them with their choice. A new timestamp is recorded and stored in the goolge sheet, every time the user scrapes new data.
 ![Welcome Screen](documentation/screenshots/welcome-screen.png)
 
+    - Welcome Screen - User input validation:
+      - Check for empty string or spaces
+      ![Welcome Validation Empty](documentation/screenshots/welcome-invalid-empty.png)
+      - Check for invalid number
+      ![Welcome Validation Number](documentation/screenshots/welcome-invalid-num.png)
+      - Check for invalid text
+      ![Welcome Validation Text](documentation/screenshots/welcome-invalid-txt.png)
+
+    - User Option - Scrape
+      - As already stated above, the scrape option includes the use of a progress bar along with enhanced print statements to provide feedback to the user. Once scraping is done, the scores are calculated and prompts the user for the leaderboard menu choices.
+      ![Scraping](documentation/screenshots/scraping.png)
+      - Crag, Boulder, Route classes are used along with the Scraper class to organise the information and the relevant methods and attributes following the principled of Object Oriented Programming (OOP). This results in an organised, encapsulated and modular code that models how the crag is structured and organised. This makes it significantly easier to maintain and update in the future, as well as allowing for *Polymorphism* in future releases when a Crag class can be adapted to the needs of Roped Climbing (currently based on Bouldering.)
+
+
+    - User Option - Retrieve
+      - This option is siginificantly faster and retrieves the current data and calculates the scores before prompting for the leaderboard menu.
+
+  - **Leaderboard Menu**:
+  This menu appears immediately after the end of processing of either the scraper or retrieve user choices. It provides the following five options and the auxilliary choice for 'help', which explains the options to the user further.
+  ![Leaderboard Menu](documentation/screenshots/lead-menu.png)
+
+      - User input validation:
+        - Check for empty string or spaces
+        ![Leaderboard Validation Empty](documentation/screenshots/lead-menu-invaid-blank.png)
+        - Check for invalid number
+        ![Leaderboard Validation Number](documentation/screenshots/lead-menu-invalid-num.png)
+        - Check for invalid text
+        ![Leaderboard Validation Text](documentation/screenshots/lead-menu-invalid-txt.png)
+
+      - Help option:
+      ![Help](documentation/screenshots/help.png)
+
+      - Exit option - returns back to the welcome screen
+
+  - **Leaderboards**:
+  The leaderboards are created by calculating a scoring table based on the scoring system parameters that are stored in a google sheets input file. A preliminary scoring table is calculated which awards points for each ascent. This table is stored as an attribute to the user-defined *Crag* class and is reused to calculate the Master Grade leaderboard, which requires a further user choice for a specific grade.
+
+  Once the various score components are calculated, the scores are grouped and aggregated by climber as needed in order to give a sum of each score. Note that for the Volume score the *max* aggregate method is used and not *sum*, as it is an overall cumulative score so it shouldn't be summed.
+
+  The *rank_leaderboard* user-defined function, is then used to sort and rank the final table to provide a ranking column.
+
+     - Total Score leaderboard
+       ![Total Score leaderboard](documentation/screenshots/overall-lead-table.png)
+     - Volume leaderboard
+       ![Volume leaderboard](documentation/screenshots/vol-lead-table.png)
+     - Unique Ascents leaderboard
+       ![Unique Ascents leaderboard](documentation/screenshots/unique-lead-table.png)
+     - Master Grade leaderboard
+       - Sub-menu - user input for grade or 0 to return to main leaderboard menu.
+       ![Master Grade Menu](documentation/screenshots/grade-lead-menu.png)
+       - Validation for empty string
+       ![Master Grade Validation Empty](documentation/screenshots/grade-val-empty.png)
+       - Validation for input not in list
+       ![Master Grade Validation Not in List](documentation/screenshots/grade-val-not-in-list.png)
+       - Master Grade leaderboard table
+       ![Master Grade leaderboard](documentation/screenshots/grade-lead-table.png)
