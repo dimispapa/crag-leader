@@ -278,3 +278,4 @@ Below are direct access links to the validation of each python module with no is
 ## Acknowledgements
 - I want to express my gratitude to my mentors Rory Patrick Sheridan and Tim for the valuable help, guidance, useful tips and reviewing/testing my work.
 - I also want to thank my girlfriend Georgina and my friend Stelios, for using the app and providing feedback.
+- Thanks to Deloitte for my past experience and training using Python.
