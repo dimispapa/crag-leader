@@ -274,3 +274,7 @@ Below are direct access links to the validation of each python module with no is
 - [Digital ocean.com](https://www.digitalocean.com): Help on the use of the __repr__ method for classes.
 - My primary mentor Rory Patrick Sheridan for the use of his code snippet for the function clear().
 - My substitution mentor Tim for his guidance and help to wrap up the project as well as recommending the use of mermaid interactivity for flowcharts that did not have time to implement.
+
+## Acknowledgements
+- I want to express my gratitude to my mentors Rory Patrick Sheridan and Tim for the valuable help, guidance, useful tips and reviewing/testing my work.
+- I also want to thank my girlfriend Georgina and my friend Stelios, for using the app and providing feedback.
