@@ -156,3 +156,26 @@ This includes the first user prompt with choices being to either "scrape" the la
        ![Master Grade Validation Not in List](documentation/screenshots/grade-val-not-in-list.png)
        - Master Grade leaderboard table
        ![Master Grade leaderboard](documentation/screenshots/grade-lead-table.png)
+
+### Future Features
+The future features are aligned with the future user goals:
+- Expand the Crag class to include methods and attributes around statistics such as Highest grade achieved in Crag by X climber, Median grade climbed etc. Implement this as options to the menus.
+- Expand the use of this accross the whole of 27crags available areas and crags, including Sport Climbing and Traditional Climbing areas.
+- Allow logging of climbs for available crag routes from the Crag Leader application itself. This might require user-authentication feature as well in order to make it more robust, as currently it relies on the users logging climbs on their account on 27crags.
+- Create a user-friendly but simple GUI for the application to enhance the UX.
+
+## Testing
+Use-case testing was carried out accross all of the app's CLI options and scenarios imagined. This meant that the code development was impacted by bugs, errors and unwanted UX issues that had to be fixed, as the application evolved and features were added.
+
+### Validator Testing
+- The code was tested with [PEP8-CI Heroku-App](https://pep8ci.herokuapp.com/).
+Below are direct access links to the validation of each python module:
+  - [boulder.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/boulder.py)
+  - [crag.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/crag.py)
+  - [gsheets.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/gsheets.py)
+  - [helper.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/helper.py)
+  - [rich_utils.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/rich_utils.py)
+  - [route.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/route.py)
+  - [score.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/score.py)
+  - [scraper.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/modules/scraper.py)
+  - [run.py](https://pep8ci.herokuapp.com/https://raw.githubusercontent.com/dimispapa/crag-leader/main/run.py)
