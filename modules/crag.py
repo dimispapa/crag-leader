@@ -66,6 +66,8 @@ class Crag:
         # initiate the progress task object to keep track
         task = progress.add_task("[yellow]Scraping crag data...",
                                  total=len(boulder_elements))
+        # initialize empty list to store boulders
+        boulders = []
         # loop through the boulder elements to extract the boulder name
         # and url
         for i in range(0, total_boulders, batch_size):
@@ -85,7 +87,7 @@ class Crag:
                 # contstruct Boulder object and add to boulders list
                 boulder = Boulder(boulder_name, boulder_url, self.base_url,
                                   self.scraper)
-                self.boulders.append(boulder)
+                boulders.append(boulder)
 
             # Update progress
             progress.update(task,
@@ -93,4 +95,4 @@ class Crag:
                             total=total_boulders)
 
         # return the boulders list
-        return self.boulders
+        return boulders
