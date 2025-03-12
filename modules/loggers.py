@@ -17,10 +17,13 @@ logging.basicConfig(
 # Create logger
 logger = logging.getLogger('crag_leader')
 
+
 # Optional: Add filter to exclude logs from showing in the terminal
 class ExcludeConsoleFilter(logging.Filter):
+
     def filter(self, record):
         return False
+
 
 # Add filter to console output but allow Heroku to capture it
 console_handler = logging.StreamHandler(sys.stdout)
