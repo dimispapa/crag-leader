@@ -124,6 +124,8 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     The main application function controlling the workflow and
     executing the imported classes and functions as required.
     """
+    clear()  # Clear before starting new scraping session
+
     # Initialize a scraper instance and store data in an object
     scraper = Scraper(headers)
 
@@ -152,6 +154,8 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     with display_progress_with_output():
         console.print("\nCrag successfully scraped!\n", style="bold green")
 
+        clear()  # Clear after scraping, before data compilation
+
         # prepare data for google sheets
         console.print("\nCompiling data to write to google sheets ...\n",
                       style="bold yellow")
@@ -161,6 +165,8 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
         # working with grades later
         route_data['Grade'] = route_data['Grade'].astype('str')
         ascent_data['Grade'] = ascent_data['Grade'].astype('str')
+
+        clear()  # Clear before starting Google Sheets operations
 
         # write data to gsheet
         console.print("\nWriting data to google sheets ...\n",
@@ -172,6 +178,7 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
         console.print("\nFinished writing data to google sheets ...\n",
                       style="bold green")
 
+    clear()  # Final clear before returning data
     return boulder_data, route_data, ascent_data
 
 

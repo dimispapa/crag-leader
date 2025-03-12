@@ -27,6 +27,16 @@ progress = Progress(
 )
 
 
+def display_progress_with_output():
+    """Create a live display that keeps progress visible"""
+    return Live(
+        progress,
+        refresh_per_second=10,
+        transient=False,
+        # This should allow content to scroll below
+        vertical_overflow="visible")
+
+
 def display_table(title: str, leaderboard: DataFrame):
     """
     Display a leaderboard using a Rich table with the specified title.
@@ -75,12 +85,3 @@ def show_help():
     Enter the number corresponding to the option you want to select.
     """
     console.print(help_text, style="bold cyan")
-
-
-def display_progress_with_output():
-    """Create a live display with auto-refresh
-    that keeps progress bar at top"""
-    return Live(progress,
-                auto_refresh=True,
-                refresh_per_second=10,
-                transient=False)
