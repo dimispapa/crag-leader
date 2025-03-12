@@ -138,11 +138,19 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
     # Check if credentials are missing
     if not username or not password:
         console.print("\nMissing 27crags.com credentials.", style="bold red")
+        return None, None, None  # Return immediately if credentials missing
 
-    # Login checks remain synchronous
-    if not all([username, password]) or not scraper.login(
-            username, password, useralias):
+    # Add debug logging
+    logger.debug(f"Username present: {bool(username)}")
+    logger.debug(f"Password present: {bool(password)}")
+    logger.debug(f"Useralias present: {bool(useralias)}")
+
+    # Attempt login
+    if not scraper.login(username, password, useralias):
+        console.print("\nFailed to login to 27crags.com.", style="bold red")
         return None, None, None
+
+    logger.debug("Login successful, proceeding with scraping")
 
     async with aiohttp.ClientSession() as session:
         with display_progress_with_output() as live:
