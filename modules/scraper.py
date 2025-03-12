@@ -83,18 +83,11 @@ class Scraper:
     def login(self, username: str, password: str):
         """
         Login to 27crags.com using provided credentials.
-        
-        Args:
-            username (str): 27crags.com username/email
-            password (str): 27crags.com password
-
-        Returns:
-            bool: True if login successful, False otherwise
         """
         login_url = "https://27crags.com/login"
 
         try:
-            # First get the login page to obtain any CSRF tokens
+            # First get the login page to obtain CSRF token
             self._rate_limit()
             login_page = self.session.get(login_url, headers=self.headers)
 
@@ -105,35 +98,32 @@ class Scraper:
                 return False
 
             soup = BeautifulSoup(login_page.content, 'html5lib')
-            csrf_element = soup.find('input', {'name': '_csrf'})
 
-            if not csrf_element:
-                print(
-                    "Could not find CSRF token. The website structure might have changed."
-                )
-                # Try to login without CSRF token as fallback
-                login_data = {
-                    'LoginForm[username]': username,
-                    'LoginForm[password]': password,
-                    'LoginForm[rememberMe]': '1'
-                }
-            else:
-                csrf_token = csrf_element.get('value')
-                login_data = {
-                    '_csrf': csrf_token,
-                    'LoginForm[username]': username,
-                    'LoginForm[password]': password,
-                    'LoginForm[rememberMe]': '1'
-                }
+            # Get CSRF token from meta tag
+            csrf_meta = soup.find('meta', {'name': 'csrf-token'})
+            if not csrf_meta:
+                print("Could not find CSRF token")
+                return False
 
-            # Add more browser-like headers
+            csrf_token = csrf_meta.get('content')
+
+            # Prepare login data with correct field names
+            login_data = {
+                'authenticity_token': csrf_token,
+                'web_user[username]': username,
+                'web_user[password]': password,
+                'web_user[remember_me]': '1'
+            }
+
+            # Add required headers
             enhanced_headers = {
                 **self.headers, 'Accept':
                 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Origin': 'https://27crags.com',
-                'Referer': login_url
+                'Referer': login_url,
+                'X-CSRF-Token': csrf_token
             }
 
             # Perform login
@@ -144,14 +134,11 @@ class Scraper:
                                          allow_redirects=True)
 
             # Check if login was successful
-            if "dashboard" in response.url:
+            if "/dashboard" in response.url or "climbers/dashboard" in response.url:
                 return True
 
-            # Additional check - look for common login failure indicators
-            if "Invalid username or password" in response.text:
+            if "Invalid email or password" in response.text:
                 print("Login failed: Invalid credentials")
-            elif "Too many login attempts" in response.text:
-                print("Login failed: Too many attempts")
             else:
                 print("Login failed: Unknown reason")
 
