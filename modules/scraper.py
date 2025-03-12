@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from modules.loggers import logger
 from rich.console import Console
-from time import time
+import time
 
 console = Console()
 
@@ -47,7 +47,7 @@ class Scraper:
         Ensures requests are spaced out by at least
         min_request_interval seconds.
         """
-        current_time = time()
+        current_time = time.time()
         time_since_last_request = current_time - self.last_request_time
         if time_since_last_request < self.min_request_interval:
             time.sleep(self.min_request_interval - time_since_last_request)
