@@ -164,7 +164,7 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
         with Live(progress, console=console, refresh_per_second=10) as live:
             try:
                 # Create crag instance with progress
-                crag = Crag(crag_url, scraper, progress)
+                crag = Crag(crag_url, scraper, live)
 
                 # Get boulders asynchronously
                 await crag.get_boulders_async(session)
