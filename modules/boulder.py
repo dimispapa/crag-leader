@@ -75,7 +75,7 @@ class Boulder:
                     # get the route name
                     route_name = anchor.text.strip()
                     console.print(
-                        f'\nExtracting route info for "{route_name}"...',
+                        f'\n\tExtracting info for route: "{route_name}"...',
                         style="bold yellow")
                     # get the route url
                     route_url = self.base_url + anchor['href']
