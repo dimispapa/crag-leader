@@ -58,16 +58,18 @@ def get_user_choice():
 
                 duration_msg = ""
                 if duration:
-                    duration_msg = f"\nLast scrape took approximately {duration} minutes."
+                    duration_msg = "\nLast scrape took approximately " \
+                                   f"{duration} minutes."
 
                 update_msg = ""
                 if time_since_update < timedelta(minutes=30):
-                    update_msg = "\n[bold yellow]Note: An automated update may be in progress."
+                    update_msg = "\n[bold yellow]Note: An automated update " \
+                                  "may be in progress."
 
                 # Modified prompt to reflect automated updates
                 choice = Prompt.ask(
-                    f"[bold cyan]Crag data has been last updated on: {timestamp}"
-                    f"{duration_msg}{update_msg}\n"
+                    "[bold cyan]Crag data has been last updated on: "
+                    f"{timestamp}{duration_msg}{update_msg}\n"
                     "Options:\n"
                     "1: Force manual update (takes ~30 minutes)\n"
                     "2: Use existing data").strip().lower()
