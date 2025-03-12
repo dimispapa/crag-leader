@@ -151,7 +151,7 @@ class Route:
                     continue
 
         else:
-            console.clear()
+            # console.clear()
             console.print(
                 f'no logs for route: {self.name}', style="bold yellow")
 
