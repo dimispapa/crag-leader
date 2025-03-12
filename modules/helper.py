@@ -129,6 +129,7 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     # Get credentials from environment variables
     username = os.environ.get('27CRAGS_USERNAME')
     password = os.environ.get('27CRAGS_PASSWORD')
+    useralias = os.environ.get('27CRAGS_USERALIAS')
 
     if not username or not password:
         console.print(
@@ -137,7 +138,7 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
         return None, None, None
 
     # Attempt login
-    if not scraper.login(username, password):
+    if not scraper.login(username, password, useralias):
         console.print(
             "\nFailed to login to 27crags.com. Please check your credentials.\n",
             style="bold red")
