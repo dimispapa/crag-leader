@@ -11,12 +11,14 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        # File handler for debug.log
+        # File handler only - removed the StreamHandler
         logging.FileHandler(
-            f'logs/debug_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
-        # Stream handler for console output
-        logging.StreamHandler()
+            f'logs/debug_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
     ])
 
 # Create logger
 logger = logging.getLogger('crag_leader')
+
+# Prevent the logger from propagating to the root logger
+# This ensures logs don't show up in the console
+logger.propagate = False
