@@ -83,11 +83,11 @@ class Scraper:
     def login(self, username: str, password: str):
         """
         Login to 27crags.com using provided credentials.
-        
+
         Args:
             username (str): 27crags.com username/email
             password (str): 27crags.com password
-            
+
         Returns:
             bool: True if login successful, False otherwise
         """
