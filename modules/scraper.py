@@ -116,22 +116,34 @@ class Scraper:
             logger.debug(f"Login response status: {response.status_code}")
             logger.debug(f"Login response URL: {response.url}")
 
-            # Check if login was successful
-            if "/dashboard" in response.url or "climbers/dashboard" in response.url:
-                logger.info("Login successful")
+            # Check login success by looking for logged-in indicators in the page
+            soup = BeautifulSoup(response.content, 'html5lib')
+
+            # Check multiple indicators of successful login
+            is_logged_in = any([
+                # Check for dashboard redirect to home page
+                "/" in response.url,
+                # Check for logged-in body class
+                soup.find('body', class_='user-logged') is not None,
+                # Check for user menu elements
+                soup.find('div', class_='user-menu') is not None,
+                # Check for logout link
+                soup.find('a', href='/logout') is not None
+            ])
+
+            if is_logged_in:
                 return True
 
+            # If login failed, check for specific error message
             if "Invalid email or password" in response.text:
-                logger.error("Login failed: Invalid credentials")
+                print("Login failed: Invalid credentials")
             else:
-                logger.error(
-                    f"Login failed: Unknown reason. Response URL: {response.url}"
-                )
+                print("Login failed: Could not verify login success")
 
             return False
 
         except Exception as e:
-            logger.exception(f"Login error: {str(e)}")
+            print(f"Login error: {str(e)}")
             return False
 
     def get_html(self, url: str):
