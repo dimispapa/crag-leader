@@ -37,7 +37,7 @@ class Scraper:
             headers (dict): The HTTP headers to use for the requests.
         """
         self.headers = headers
-        self.session = None  # Will be set when creating aiohttp session
+        self.session = requests.Session()  # Initialize synchronous session
         self.is_authenticated = False
         self.last_request_time = 0
         self.login_url = "https://27crags.com/login"
