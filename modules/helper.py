@@ -8,6 +8,7 @@ from pyfiglet import figlet_format
 from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.rich_utils import console, display_progress_with_output
+from typing import Union
 
 
 def clear():
@@ -18,7 +19,7 @@ def clear():
     console.clear()
 
 
-def rank_leaderboard(leaderboard: pd.DataFrame or pd.Series,
+def rank_leaderboard(leaderboard: Union[pd.DataFrame, pd.Series],
                      ranking_column: str):
     """
     Sort and rank the leaderboard based on the selected column.
