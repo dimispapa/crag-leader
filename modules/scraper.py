@@ -35,8 +35,10 @@ class Scraper:
         self.session = requests.Session()
         self.is_authenticated = False
         self.last_request_time = 0
-        self.min_request_interval = int(
-            os.environ.get("MIN_REQUEST_INTERVAL", 1))
+        self.login_url = "https://27crags.com/login"
+        self.min_request_interval = 3  # seconds
+        self.max_retries = 3
+        self.retry_delay = 5  # seconds
 
     def _rate_limit(self):
         """
@@ -50,14 +52,13 @@ class Scraper:
 
     def login(self, username: str, password: str, useralias: str):
         """Login to 27crags.com using provided credentials."""
-        login_url = "https://27crags.com/login"
         self.useralias = useralias
 
         try:
             # First get the login page to obtain CSRF token
             logger.debug("Attempting to get login page")
             self._rate_limit()
-            login_page = self.session.get(login_url, headers=self.headers)
+            login_page = self.session.get(self.login_url, headers=self.headers)
 
             if login_page.status_code != 200:
                 logger.error(
@@ -97,7 +98,7 @@ class Scraper:
             # Perform login
             logger.debug("Attempting login request")
             self._rate_limit()
-            response = self.session.post(login_url,
+            response = self.session.post(self.login_url,
                                          data=login_data,
                                          headers=enhanced_headers,
                                          allow_redirects=True)
@@ -137,15 +138,38 @@ class Scraper:
             return False
 
     def get_html(self, url: str):
-        """Make authenticated request"""
-        if not self.is_authenticated:
-            attempt_login = self.login(self.username, self.password,
-                                       self.useralias)
-            if not attempt_login:
-                raise Exception("Not authenticated")
+        """Make an HTTP GET request with retry logic."""
+        max_retries = 3
+        retry_delay = 5  # seconds
 
-        response = self.session.get(url, headers=self.headers)
-        return BeautifulSoup(response.content, 'html5lib')
+        for attempt in range(max_retries):
+            try:
+                self._rate_limit()  # Enforce rate limiting
+                response = self.session.get(url, headers=self.headers)
+
+                if response.status_code == 429:
+                    wait_time = int(
+                        response.headers.get('Retry-After', retry_delay))
+                    print(
+                        f"\nRate limited. Waiting {wait_time} seconds before retrying..."
+                    )
+                    time.sleep(wait_time)
+                    continue
+
+                response.raise_for_status(
+                )  # Raise exception for other error status codes
+                return BeautifulSoup(response.content, 'html5lib')
+
+            except requests.exceptions.RequestException as e:
+                if attempt == max_retries - 1:  # Last attempt
+                    raise Exception(
+                        f"Failed to fetch {url} after {max_retries} attempts: {str(e)}"
+                    )
+                print(
+                    f"\nRequest failed. Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+
+        raise Exception(f"Failed to fetch {url} after {max_retries} attempts")
 
     def get_json_html(self, url: str):
         """
