@@ -77,7 +77,7 @@ def show_help():
     console.print(help_text, style="bold cyan")
 
 
-def create_live_display():
+def display_progress_with_output():
     """Create a live display with auto-refresh
     that keeps progress bar at top"""
     return Live(progress,
