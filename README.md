@@ -298,10 +298,6 @@ Below are direct access links to the validation of each python module with no is
 
 #### Changed
 - Improved error handling for API requests
-- Updated documentation for authentication setup
-
-#### Fixed
-- Various scraping reliability improvements
 
 ### Version 1.0.0 (Initial Release - 2024-11-11)
 - Initial release of Crag Leader
