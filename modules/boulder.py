@@ -9,6 +9,7 @@ from modules.route import Route
 import time
 from modules.loggers import logger
 import aiohttp
+import asyncio
 
 
 class Boulder:
@@ -67,12 +68,14 @@ class Boulder:
         if routes_table_tbody:
             tr_elements = routes_table_tbody.find_all('tr')
 
-            # Use global progress object for task creation
+            # Create task for this boulder's routes
             task_id = progress.add_task(
                 f"[cyan]Processing routes for {self.name}...",
                 total=len(tr_elements))
 
             batch_size = 3
+            processed_count = 0  # Track how many routes we've processed
+
             for i in range(0, len(tr_elements), batch_size):
                 batch = tr_elements[i:i + batch_size]
 
@@ -81,11 +84,13 @@ class Boulder:
                         tr_element, session)
                     if route:
                         routes.append(route)
+                    # Increment counter for each processed route
+                    processed_count += 1
+                    # Update progress after each route
+                    progress.update(task_id, completed=processed_count)
 
-                if self.live and task_id is not None:
-                    self.live.update(task_id,
-                                     completed=min(i + len(batch),
-                                                   len(tr_elements)))
+                # Optional: Add a small delay between batches if needed
+                await asyncio.sleep(0.1)
 
         return routes
 
