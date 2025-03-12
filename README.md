@@ -279,3 +279,24 @@ Below are direct access links to the validation of each python module with no is
 - I want to express my gratitude to my mentors Rory Patrick Sheridan and Tim for the valuable help, guidance, useful tips and reviewing/testing my work.
 - I also want to thank my girlfriend Georgina and my friend Stelios, for using the app and providing feedback.
 - Thanks to Deloitte for my past experience and training using Python.
+
+## Changelog
+
+### Version 1.1.0 (2024-03-12)
+#### Added
+- Automated login functionality for 27crags.com
+- Rate limiting for web scraping (1 request/second)
+- Environment variable support for credentials
+
+#### Changed
+- Improved error handling for API requests
+- Updated documentation for authentication setup
+
+#### Fixed
+- Various scraping reliability improvements
+
+### Version 1.0.0 (Initial Release)
+- Initial release of Crag Leader
+- Basic scraping functionality
+- Leaderboard system
+- Google Sheets integration
