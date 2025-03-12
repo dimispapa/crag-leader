@@ -66,14 +66,32 @@ class Scraper:
             # First get the login page to obtain CSRF token
             logger.debug("Attempting to get login page")
             self._rate_limit()
-            login_page = self.session.get(self.login_url, headers=self.headers)
+
+            try:
+                login_page = self.session.get(self.login_url,
+                                              headers=self.headers)
+                logger.debug(
+                    f"Login page response status: {login_page.status_code}")
+                logger.debug(
+                    f"Login page response headers: {login_page.headers}")
+            except Exception as e:
+                logger.error(f"Failed to get login page: {str(e)}")
+                return False
 
             if login_page.status_code != 200:
-                logger.error(f"Failed to load login page. "
-                             f"Status code: {login_page.status_code}")
+                logger.error(
+                    f"Failed to load login page. Status code: "
+                    f"{login_page.status_code}")
+                return False
+
+            if not login_page.content:
+                logger.error("Login page response content is empty")
                 return False
 
             soup = BeautifulSoup(login_page.content, 'html5lib')
+            if not soup:
+                logger.error("Failed to parse login page content")
+                return False
 
             # Get CSRF token from meta tag
             csrf_meta = soup.find('meta', {'name': 'csrf-token'})
