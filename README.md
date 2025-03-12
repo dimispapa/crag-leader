@@ -290,7 +290,7 @@ Below are direct access links to the validation of each python module with no is
 
 ## Changelog
 
-### Version 1.1.0 (2024-03-12)
+### Version 1.1.0 (2025-03-12)
 #### Added
 - Automated login functionality for 27crags.com
 - Rate limiting for web scraping (1 request/second)
@@ -303,7 +303,7 @@ Below are direct access links to the validation of each python module with no is
 #### Fixed
 - Various scraping reliability improvements
 
-### Version 1.0.0 (Initial Release)
+### Version 1.0.0 (Initial Release - 2024-11-11)
 - Initial release of Crag Leader
 - Basic scraping functionality
 - Leaderboard system
