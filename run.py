@@ -78,7 +78,7 @@ def get_user_choice():
                     "[bold cyan]Crag data has been last updated on: "
                     f"{timestamp}{duration_msg}{update_msg}\n"
                     "Options:\n"
-                    "1: Force manual update (takes ~30 minutes)\n"
+                    "1: Force new data collection (takes ~30 minutes)\n"
                     "2: Use existing data").strip().lower()
             else:
                 # prompt user choice.

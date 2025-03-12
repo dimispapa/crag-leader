@@ -54,7 +54,7 @@ class Boulder:
 
     def get_routes(self, batch_size=3):
         """Retrieve the list of routes for the boulder in batches"""
-        console.print(f'\nExtracting routes for "{self.name}"...\n',
+        console.print(f'\n\tExtracting routes for "{self.name}"...\n',
                       style="bold yellow")
 
         soup = self.scraper.get_html(self.url)
@@ -75,7 +75,7 @@ class Boulder:
                     # get the route name
                     route_name = anchor.text.strip()
                     console.print(
-                        f'\nExtracting route info for "{route_name}"...\n',
+                        f'\nExtracting route info for "{route_name}"...',
                         style="bold yellow")
                     # get the route url
                     route_url = self.base_url + anchor['href']

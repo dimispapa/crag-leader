@@ -67,7 +67,7 @@ class Route:
 
     def get_ascent_log(self, batch_size=3):
         """Retrieve the ascent log for the route in batches"""
-        console.print(f'\n\t\tGetting ascent log for {self.name}...',
+        console.print(f'\n\t\tGetting ascent log for {self.name}...\n',
                       style="bold yellow")
 
         soup = self.scraper.get_html(self.url)
