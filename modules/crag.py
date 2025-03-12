@@ -40,56 +40,57 @@ class Crag:
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
-        # console.clear()
-        self.console.print("Please wait while the scraper is retrieving info "
-                           f"from '{self.crag_url}' ...\n",
-                           style="bold yellow")
+        self.console.print(
+            "Please wait while the scraper is retrieving info "
+            f"from '{self.crag_url}' ...\n",
+            style="bold yellow")
         self.boulders = self.get_boulders()
         self.progress = progress
 
-    def get_boulders(self):
-        """
-        Retrieve the list of boulders for the crag.
-
-        Returns:
-            list: A list of Boulder instances.
-        """
+    def get_boulders(self, batch_size=5):
+        """Get boulders in batches"""
         # scrape parsed html content from url
-        # console.clear()
-        console.print(f'\nScraping boulder list from "{self.routelist_url} "'
-                      'crag...\n', style="bold yellow")
+        console.print(
+            f'\nScraping boulder list from "{self.routelist_url} "'
+            'crag...\n',
+            style="bold yellow")
         soup = self.scraper.get_html(self.routelist_url)
 
         # locate anchor elements with "sector-item" class.
         # These contain the boulder pages, exclude the first one which is a
         # combined list of all routes
-        boulder_elements = soup.find_all(
-            'a', attrs={'class': 'sector-item'})[1:]
+        boulder_elements = soup.find_all('a', attrs={'class':
+                                                     'sector-item'})[1:]
 
-        boulders = []  # initialize empty boulders list
-
+        total_boulders = len(boulder_elements)
         # initiate the progress task object to keep track
         task = progress.add_task("[yellow]Scraping crag data...",
                                  total=len(boulder_elements))
         # loop through the boulder elements to extract the boulder name
         # and url
-        for boulder_elem in boulder_elements:
-            # extract attributes from anchor element
-            boulder_name = boulder_elem.find(
-                'div', attrs={'class': 'name'}).text.strip()
-            # console.clear()
-            console.print(
-                f'\nProcessing boulder info for "{boulder_name}" ...\n',
-                style="bold yellow")
-            # concat the boulder url on the base url
-            boulder_url = self.base_url + boulder_elem['href']
+        for i in range(0, total_boulders, batch_size):
+            batch = boulder_elements[i:i + batch_size]
+            # Process batch
+            for boulder_elem in batch:
+                boulder_name = boulder_elem.find('div',
+                                                 attrs={
+                                                     'class': 'name'
+                                                 }).text.strip()
+                console.print(
+                    f'\nProcessing boulder info for "{boulder_name}" ...\n',
+                    style="bold yellow")
+                # concat the boulder url on the base url
+                boulder_url = self.base_url + boulder_elem['href']
 
-            # contstruct Boulder object and add to boulders list
-            boulder = Boulder(boulder_name, boulder_url,
-                              self.base_url, self.scraper)
-            boulders.append(boulder)
-            # update the task progress
-            progress.update(task, advance=1)
+                # contstruct Boulder object and add to boulders list
+                boulder = Boulder(boulder_name, boulder_url, self.base_url,
+                                  self.scraper)
+                self.boulders.append(boulder)
+
+            # Update progress
+            progress.update(task,
+                            completed=i + len(batch),
+                            total=total_boulders)
 
         # return the boulders list
-        return boulders
+        return self.boulders

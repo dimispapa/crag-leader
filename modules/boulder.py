@@ -75,7 +75,6 @@ class Boulder:
             # get the anchor element in the tr and extract name and url
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
-            # console.clear()
             console.print(f'\nExtracting route info for "{route_name}"...\n',
                           style="bold yellow")
             # concat the route url on the base url
