@@ -104,9 +104,23 @@ def get_user_choice():
         except ValueError as ve:
             console.print(
                 f"Error retrieving timestamp: {ve}\n"
-                "Processing a new scrape as default option ...\n",
+                "No existing data found or error accessing data.\n",
                 style="bold red")
-            return 'scrape'
+
+            # Prompt user choice instead of defaulting to scrape
+            choice = Prompt.ask("[bold cyan]Options:\n"
+                                "1: Start data collection\n"
+                                "2: Exit").strip().lower()
+
+            if not choice or choice not in ['1', '2']:
+                clear()
+                console.print(
+                    "\nInvalid choice. Please enter 1 to start collection "
+                    "or 2 to exit.\n",
+                    style="bold red")
+                return get_user_choice()  # Recursive call to reprompt
+
+            return 'scrape' if choice == '1' else 'retrieve'
 
 
 def leaderboard_mode(agg_table: pd.DataFrame,
