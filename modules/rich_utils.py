@@ -23,18 +23,21 @@ progress = Progress(
     TimeElapsedColumn(),  # Shows time elapsed
     TimeRemainingColumn(),  # Shows estimated time remaining
     expand=True,
-    transient=False  # Keep progress output visible
+    console=console,  # Explicitly set console
+    transient=True  # Make it transient so it stays in place
 )
 
 
 def display_progress_with_output():
-    """Create a live display that keeps progress visible"""
+    """Create a live display with fixed progress bar at bottom"""
     return Live(
         progress,
+        console=console,
         refresh_per_second=10,
-        transient=False,
-        # This should allow content to scroll below
-        vertical_overflow="visible")
+        transient=True,  # Keep progress bar transient
+        auto_refresh=True,  # Enable auto-refresh
+        vertical_overflow="visible"  # Allow content to scroll
+    )
 
 
 def display_table(title: str, leaderboard: DataFrame):
