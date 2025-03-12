@@ -7,6 +7,8 @@ from modules.rich_utils import console
 from modules.scraper import Scraper
 from modules.route import Route
 import time
+import asyncio
+from modules.loggers import logger
 
 
 class Boulder:
@@ -40,8 +42,61 @@ class Boulder:
         self.url = url
         self.base_url = base_url
         self.scraper = scraper
-        # call get_routes method and pass routes list as a boulder attribute
-        self.routes = self.get_routes()
+        self.routes = []
+
+    async def async_init(self, session):
+        """Async initialization"""
+        self.routes = await self.get_routes_async(session)
+        return self
+
+    async def get_routes_async(self, session, batch_size=3):
+        """Async version of get_routes"""
+        console.print(f'\nExtracting routes for "{self.name}"...\n',
+                      style="bold yellow")
+
+        soup = await self.scraper.get_html_async(self.url, session)
+        routes_table_tbody = soup.find('tbody')
+        routes = []
+
+        if routes_table_tbody:
+            tr_elements = routes_table_tbody.find_all('tr')
+
+            for i in range(0, len(tr_elements), batch_size):
+                batch = tr_elements[i:i + batch_size]
+                batch_tasks = []
+
+                for tr_element in batch:
+                    route = await self._process_route_element(
+                        tr_element, session)
+                    if route:
+                        routes.append(route)
+
+                await asyncio.gather(*batch_tasks)
+
+        return routes
+
+    async def _process_route_element(self, tr_element, session):
+        """Process a single route element asynchronously"""
+        try:
+            anchor = tr_element.find('a')
+            route_name = anchor.text.strip()
+            route_url = self.base_url + anchor['href']
+            grade = tr_element.find('span', attrs={
+                'class': 'grade'
+            }).text.strip().upper()
+            td_elements = tr_element.find_all('td')
+            no_of_ascents = td_elements[3].text.strip()
+            rating = tr_element.find('div', attrs={
+                'class': 'rating'
+            }).text.strip()
+
+            route = Route(route_name, route_url, self.base_url, grade,
+                          int(no_of_ascents), float(rating), self.scraper)
+            await route.async_init(session)
+            return route
+        except Exception as e:
+            logger.error(f"Error processing route: {str(e)}")
+            return None
 
     def __repr__(self):
         """

@@ -7,6 +7,8 @@ from modules.rich_utils import console, progress
 from modules.scraper import Scraper
 from modules.boulder import Boulder
 import time
+import aiohttp
+import asyncio
 
 
 class Crag:
@@ -101,3 +103,48 @@ class Crag:
 
         # Return the list of Boulder instances
         return boulders
+
+    async def get_boulders_async(self, batch_size=3):
+        """Get boulders asynchronously in batches"""
+        console.print(
+            f'\nScraping boulder list from "{self.routelist_url} "'
+            'crag...\n',
+            style="bold yellow")
+
+        async with aiohttp.ClientSession() as session:
+            soup = await self.scraper.get_html_async(self.routelist_url,
+                                                     session)
+            boulder_elements = soup.find_all('a',
+                                             attrs={'class':
+                                                    'sector-item'})[1:]
+            total_boulders = len(boulder_elements)
+
+            task = progress.add_task("[yellow]Scraping crag data...",
+                                     total=total_boulders)
+            boulders = []
+
+            for i in range(0, total_boulders, batch_size):
+                batch = boulder_elements[i:i + batch_size]
+                tasks = []
+
+                for boulder_elem in batch:
+                    boulder_name = boulder_elem.find('div',
+                                                     attrs={
+                                                         'class': 'name'
+                                                     }).text.strip()
+                    console.print(
+                        f'\nProcessing boulder info for "{boulder_name}" ...\n',
+                        style="bold yellow")
+                    boulder_url = self.base_url + boulder_elem['href']
+
+                    boulder = Boulder(boulder_name, boulder_url, self.base_url,
+                                      self.scraper)
+                    boulders.append(boulder)
+                    tasks.append(boulder.async_init(session))
+
+                # Process batch concurrently
+                await asyncio.gather(*tasks)
+                progress.update(task,
+                                completed=min(i + batch_size, total_boulders))
+
+            return boulders

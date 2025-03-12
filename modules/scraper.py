@@ -6,6 +6,8 @@ User is advised to import the 'Scraper' and 'Crag' classes in this order
 to pass the Scraper instance as an argument for the Crag instance.
 """
 import json
+import asyncio
+import aiohttp
 import requests
 from bs4 import BeautifulSoup
 from modules.loggers import logger
@@ -240,3 +242,59 @@ class Scraper:
             time.sleep(self.min_request_interval)  # Rate limit between chunks
 
         return results
+
+    async def get_html_async(self, url: str, session: aiohttp.ClientSession):
+        """Async version of get_html with retry logic."""
+        for attempt in range(self.max_retries):
+            try:
+                await self._async_rate_limit()
+
+                if attempt > 0:
+                    console.print(
+                        f"\nRetry attempt {attempt} of {self.max_retries-1}...",
+                        style="bold yellow")
+
+                async with session.get(url, headers=self.headers) as response:
+                    if response.status == 429:
+                        wait_time = int(
+                            response.headers.get('Retry-After', self.retry_delay))
+                        console.print(
+                            f"\nRate limit reached. Waiting {wait_time} seconds...",
+                            style="bold yellow")
+                        await asyncio.sleep(wait_time)
+                        continue
+
+                    response.raise_for_status()
+                    content = await response.text()
+                    return BeautifulSoup(content, 'html5lib')
+
+            except Exception as e:
+                if attempt == self.max_retries - 1:
+                    console.print(
+                        f"\nFailed to fetch data after {self.max_retries} attempts.",
+                        style="bold red")
+                    raise Exception(f"Failed to fetch {url}: {str(e)}")
+
+                console.print(
+                    f"\nRequest failed. Retrying in {self.retry_delay} seconds...",
+                    style="bold yellow")
+                await asyncio.sleep(self.retry_delay)
+
+        raise Exception(f"Failed to fetch {url} after {self.max_retries} attempts")
+
+    async def _async_rate_limit(self):
+        """Async version of rate limiting"""
+        current_time = time.time()
+        time_since_last_request = current_time - self.last_request_time
+        if time_since_last_request < self.min_request_interval:
+            await asyncio.sleep(self.min_request_interval - time_since_last_request)
+        self.last_request_time = time.time()
+
+    async def get_json_html_async(self, url: str, session: aiohttp.ClientSession):
+        """Async version of get_json_html"""
+        await self._async_rate_limit()
+        async with session.get(url, headers=self.headers) as response:
+            content = await response.text()
+            additional_ascents_json = json.loads(content)
+            additional_ascents_html = additional_ascents_json['ticks']
+            return BeautifulSoup(additional_ascents_html, 'html5lib')

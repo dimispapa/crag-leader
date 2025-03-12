@@ -9,6 +9,7 @@ from modules.scraper import Scraper
 from modules.crag import Crag
 from modules.rich_utils import console, display_progress_with_output
 from typing import Union
+import asyncio
 
 
 def clear():
@@ -119,46 +120,32 @@ def compile_data(crag: Crag):
     return boulder_data, route_data, ascent_data
 
 
-def scrape_data(headers: dict, crag_url: str, gsc: client):
-    """
-    The main application function controlling the workflow and
-    executing the imported classes and functions as required.
-    """
-    clear()  # Clear before starting new scraping session
+async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
+    """Async version of scrape_data"""
+    clear()
 
-    # Initialize a scraper instance and store data in an object
     scraper = Scraper(headers)
 
-    # Get credentials from environment variables
+    # Login remains synchronous as it only happens once
     username = os.environ.get('27CRAGS_USERNAME')
     password = os.environ.get('27CRAGS_PASSWORD')
     useralias = os.environ.get('27CRAGS_USERALIAS')
 
     if not username or not password:
-        console.print(
-            "\nMissing 27crags.com credentials in environment variables.\n",
-            style="bold red")
+        console.print("\nMissing 27crags.com credentials.", style="bold red")
         return None, None, None
 
-    # Attempt login
     if not scraper.login(username, password, useralias):
-        console.print(
-            "\nFailed to login to 27crags.com. Please check your "
-            "credentials.\n",
-            style="bold red")
+        console.print("\nFailed to login to 27crags.com.", style="bold red")
         return None, None, None
 
-    # Create crag instance before starting live display
     crag = Crag(crag_url, scraper)
 
     with display_progress_with_output():
-        console.print("\nCrag successfully scraped!\n", style="bold green")
+        # Get boulders asynchronously
+        crag.boulders = await crag.get_boulders_async()
 
-        clear()  # Clear after scraping, before data compilation
-
-        # prepare data for google sheets
-        console.print("\nCompiling data to write to google sheets ...\n",
-                      style="bold yellow")
+        # Compile and process data
         boulder_data, route_data, ascent_data = compile_data(crag)
 
         # cast the Grade col to string to ensure consistency when
@@ -180,6 +167,11 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
 
     clear()  # Final clear before returning data
     return boulder_data, route_data, ascent_data
+
+
+def scrape_data(headers: dict, crag_url: str, gsc: client):
+    """Wrapper for async_scrape_data to run in synchronous context"""
+    return asyncio.run(async_scrape_data(headers, crag_url, gsc))
 
 
 def retrieve_data(gsc: client):
