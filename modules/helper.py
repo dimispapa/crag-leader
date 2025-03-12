@@ -151,18 +151,7 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     # Create crag instance before starting live display
     crag = Crag(crag_url, scraper)
 
-    with display_progress_with_output() as live:
-        task = live.add_task("Scraping boulders...", total=100)
-
-        # Process in batches
-        for batch_num, batch_data in enumerate(
-                crag.get_boulders(batch_size=5)):
-            live.update(task, description=f"Processing batch {batch_num + 1}")
-
-            # Store intermediate results
-            if batch_data:
-                gsc.update_partial_data('data', batch_data)
-
+    with display_progress_with_output():
         console.print("\nCrag successfully scraped!\n", style="bold green")
 
         clear()  # Clear after scraping, before data compilation

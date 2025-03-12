@@ -6,6 +6,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from modules.scraper import Scraper
 from modules.rich_utils import console
+import time
 
 
 class Route:
@@ -64,17 +65,11 @@ class Route:
                 f"grade={self.grade}, ascents={self.ascents}, "
                 f"rating={self.rating}")
 
-    def get_ascent_log(self):
-        """
-        Retrieve the ascent log for the route, including additional ascents.
-
-        Returns:
-            list: A list of dictionaries containing climber's name, ascent
-            type and date.
-        """
-        console.print(f'\tGetting ascent log for {self.name}...',
+    def get_ascent_log(self, batch_size=3):
+        """Retrieve the ascent log for the route in batches"""
+        console.print(f'\n\t\tGetting ascent log for {self.name}...',
                       style="bold yellow")
-        # Get the initial page and parse the HTML
+
         soup = self.scraper.get_html(self.url)
         ascent_log = self.extract_ascent_log(soup)
 
@@ -87,7 +82,7 @@ class Route:
             # to fetch the file with the printed json file
             more_ascents_url = more_ascents_button.find('a')['href']
             if more_ascents_url:
-                # get full URL for scraper to access
+                # get the full URL for scraper to access
                 full_more_ascents_url = self.base_url + more_ascents_url
                 # scrape additional ascents
                 # fetch the url page with the printed json
@@ -96,8 +91,15 @@ class Route:
                 # call method to extract the info from the parsed HTML
                 additional_ascent_log = self.extract_ascent_log(
                     more_ascents_soup)
-                # extend the ascent_log list with the additional ascents
-                ascent_log.extend(additional_ascent_log)
+
+                # Process additional ascents in batches
+                for i in range(0, len(additional_ascent_log), batch_size):
+                    # process each batch
+                    batch = additional_ascent_log[i:i + batch_size]
+                    # extend the ascent_log list with the additional ascents
+                    ascent_log.extend(batch)
+                    # add a small delay between batches
+                    time.sleep(self.scraper.min_request_interval)
 
         return ascent_log
 
@@ -156,7 +158,6 @@ class Route:
                     continue
 
         else:
-            # console.clear()
             console.print(f'no logs for route: {self.name}',
                           style="bold yellow")
 

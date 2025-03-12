@@ -14,6 +14,7 @@ from modules.gsheets import GoogleSheetsClient
 from modules.score import ScoreCalculator
 from modules.helper import (scrape_data, retrieve_data, clear, welcome_msg,
                             rank_leaderboard)
+from datetime import datetime, timedelta
 
 # GLOBAL CONSTANTS
 # Define constants for scraping
@@ -48,22 +49,35 @@ def get_user_choice():
     while True:
         try:
             # get the latest timestamp + duration from google sheet file
-            # and handle value error to process a new scrape
             timestamp, duration = GSC.get_timestamp_and_duration('data')
-            duration_msg = ""
-            if duration:
-                duration_msg = \
-                    f"\nLast scrape took approximately {duration} minutes."
-            # prompt user choice.
-            # Case-insesitive and remove leading/trailing spaces
-            choice = Prompt.ask(
-                f"[bold cyan]Crag data has been last updated on: {timestamp}"
-                f"{duration_msg}\n"
-                "Do you want to scrape the latest data from 27crags "
-                "or retrieve existing data? \n"
-                "(Please type 1 for 'scraping latest data' or "
-                "2 for 'retrieving current stored data, then press enter.')"
-            ).strip().lower()
+
+            # Check if automated update is in progress
+            if timestamp:
+                last_update = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+                time_since_update = datetime.now() - last_update
+
+                duration_msg = ""
+                if duration:
+                    duration_msg = f"\nLast scrape took approximately {duration} minutes."
+
+                update_msg = ""
+                if time_since_update < timedelta(minutes=30):
+                    update_msg = "\n[bold yellow]Note: An automated update may be in progress."
+
+                # Modified prompt to reflect automated updates
+                choice = Prompt.ask(
+                    f"[bold cyan]Crag data has been last updated on: {timestamp}"
+                    f"{duration_msg}{update_msg}\n"
+                    "Options:\n"
+                    "1: Force manual update (takes ~30 minutes)\n"
+                    "2: Use existing data").strip().lower()
+            else:
+                # prompt user choice.
+                # Case-insesitive and remove leading/trailing spaces
+                choice = Prompt.ask("[bold cyan]No existing data found.\n"
+                                    "Options:\n"
+                                    "1: Start data collection\n"
+                                    "2: Exit").strip().lower()
 
             # check if entry is empty (or spaces):
             if not choice:

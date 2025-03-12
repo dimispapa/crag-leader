@@ -64,10 +64,8 @@ class Scraper:
             login_page = self.session.get(self.login_url, headers=self.headers)
 
             if login_page.status_code != 200:
-                logger.error(
-                    f"Failed to load login page. "
-                    f"Status code: {login_page.status_code}"
-                )
+                logger.error(f"Failed to load login page. "
+                             f"Status code: {login_page.status_code}")
                 return False
 
             soup = BeautifulSoup(login_page.content, 'html5lib')
@@ -95,8 +93,10 @@ class Scraper:
                 **self.headers, 'Accept':
                 'text/html,application/xhtml+xml,application/xml;q=0.9,'
                 '*/*;q=0.8',
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': csrf_token
+                'Content-Type':
+                'application/x-www-form-urlencoded',
+                'X-CSRF-Token':
+                csrf_token
             }
             logger.debug("Enhanced headers prepared")
 
@@ -138,9 +138,10 @@ class Scraper:
                 console.print("\nLogin to 27crags failed: Invalid credentials",
                               style="bold red")
             else:
-                console.print("\nLogin to 27crags failed: Could not verify "
-                              "login success",
-                              style="bold red")
+                console.print(
+                    "\nLogin to 27crags failed: Could not verify "
+                    "login success",
+                    style="bold red")
 
             return False
 
@@ -151,8 +152,8 @@ class Scraper:
 
     def get_html(self, url: str):
         """Make an HTTP GET request with retry logic."""
-        max_retries = 3
-        retry_delay = 5  # seconds
+        max_retries = self.max_retries
+        retry_delay = self.retry_delay
 
         for attempt in range(max_retries):
             try:
@@ -213,3 +214,27 @@ class Scraper:
         additional_ascents_html = additional_ascents_json['ticks']
         # return the parsed html content
         return BeautifulSoup(additional_ascents_html, 'html5lib')
+
+    def get_batch_html(self, urls: list, batch_size=3):
+        """Process multiple URLs in batches with rate limiting"""
+        # Initialize results list
+        results = []
+
+        # Process URLs in batches
+        for i in range(0, len(urls), batch_size):
+            chunk = urls[i:i + batch_size]
+            chunk_results = []
+
+            # Process each URL in the batch
+            for url in chunk:
+                try:
+                    result = self.get_html(url)  # Use existing get_html method
+                    chunk_results.append(result)
+                except Exception as e:
+                    logger.error(f"Failed to fetch {url}: {str(e)}")
+                    chunk_results.append(None)
+
+            results.extend(chunk_results)
+            time.sleep(self.min_request_interval)  # Rate limit between chunks
+
+        return results
