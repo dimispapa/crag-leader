@@ -48,17 +48,6 @@ class Scraper:
             time.sleep(self.min_request_interval - time_since_last_request)
         self.last_request_time = time.time()
 
-    def check_auth(self):
-        """Check if currently authenticated"""
-        if not self.is_authenticated:
-            return False
-
-        # Make request to protected endpoint
-        response = self.session.get(
-            f"https://27crags.com/climbers/{self.useralias}",
-            headers=self.headers)
-        return response.status_code == 200
-
     def login(self, username: str, password: str, useralias: str):
         """Login to 27crags.com using provided credentials."""
         login_url = "https://27crags.com/login"
@@ -132,6 +121,7 @@ class Scraper:
             ])
 
             if is_logged_in:
+                self.is_authenticated = True
                 return True
 
             # If login failed, check for specific error message
@@ -148,8 +138,11 @@ class Scraper:
 
     def get_html(self, url: str):
         """Make authenticated request"""
-        if not self.check_auth():
-            raise Exception("Not authenticated")
+        if not self.is_authenticated:
+            attempt_login = self.login(self.username, self.password,
+                                       self.useralias)
+            if not attempt_login:
+                raise Exception("Not authenticated")
 
         response = self.session.get(url, headers=self.headers)
         return BeautifulSoup(response.content, 'html5lib')
