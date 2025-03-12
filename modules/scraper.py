@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from modules.loggers import logger
 from rich.console import Console
 import time
+import os
 
 console = Console()
 
@@ -38,9 +39,11 @@ class Scraper:
         self.is_authenticated = False
         self.last_request_time = 0
         self.login_url = "https://27crags.com/login"
-        self.min_request_interval = 1  # seconds
-        self.max_retries = 3
-        self.retry_delay = 3  # seconds
+        # Get environment variables
+        self.min_request_interval = os.getenv(
+            "MIN_REQUEST_INTERVAL")  # seconds
+        self.max_retries = os.getenv("MAX_RETRIES")
+        self.retry_delay = os.getenv("RETRY_DELAY")  # seconds
 
     def _rate_limit(self):
         """
