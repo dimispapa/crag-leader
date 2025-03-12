@@ -7,7 +7,6 @@ from modules.rich_utils import console
 from modules.scraper import Scraper
 from modules.route import Route
 import time
-import asyncio
 from modules.loggers import logger
 import aiohttp
 
@@ -77,16 +76,12 @@ class Boulder:
             batch_size = 3
             for i in range(0, len(tr_elements), batch_size):
                 batch = tr_elements[i:i + batch_size]
-                batch_tasks = []
 
                 for tr_element in batch:
                     route = await self._process_route_element(
                         tr_element, session)
                     if route:
                         routes.append(route)
-                        batch_tasks.append(route.async_init(session))
-
-                await asyncio.gather(*batch_tasks)
 
                 if self.live and task_id is not None:
                     self.live.update(task_id,
