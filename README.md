@@ -12,6 +12,14 @@ This app aims to process the scraped information and it is capable of displaying
 
 <br/>
 
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/). Release format: `<major>.<minor>.<patch>`.
+
+For a list of all releases and changes, see the [Changelog](#changelog).
+
+Latest stable version: 1.1.0
+
 ## UX
 
 ### App Purpose
