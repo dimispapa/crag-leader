@@ -12,7 +12,8 @@ from typing import Union
 import asyncio
 import aiohttp
 import logging
-from modules.rich_utils import display_progress_with_output
+from rich.progress import Progress, BarColumn, TimeRemainingColumn
+from rich.live import Live
 
 logger = logging.getLogger(__name__)
 
@@ -152,12 +153,18 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
 
     logger.debug("Login successful, proceeding with scraping")
 
-    # Use the progress display for the entire scraping process
-    with display_progress_with_output() as live:
-        async with aiohttp.ClientSession() as session:
+    # Create a new Progress instance for this scraping session
+    progress = Progress("[progress.description]{task.description}",
+                        BarColumn(),
+                        "[progress.percentage]{task.percentage:>3.0f}%",
+                        TimeRemainingColumn(),
+                        console=console)
+
+    async with aiohttp.ClientSession() as session:
+        with Live(progress, console=console, refresh_per_second=10) as live:
             try:
-                # Create crag instance with live context
-                crag = Crag(crag_url, scraper, live)
+                # Create crag instance with progress
+                crag = Crag(crag_url, scraper, progress)
 
                 # Get boulders asynchronously
                 await crag.get_boulders_async(session)
