@@ -129,21 +129,24 @@ class Scraper:
 
             if is_logged_in:
                 self.is_authenticated = True
-                console.print("\nLogin successful!", style="bold green")
+                console.print("\nLogin to 27crags was successful!",
+                              style="bold green")
                 return True
 
             # If login failed, check for specific error message
             if "Invalid email or password" in response.text:
-                console.print("\nLogin failed: Invalid credentials",
+                console.print("\nLogin to 27crags failed: Invalid credentials",
                               style="bold red")
             else:
-                console.print("\nLogin failed: Could not verify login success",
+                console.print("\nLogin to 27crags failed: Could not verify "
+                              "login success",
                               style="bold red")
 
             return False
 
         except Exception as e:
-            console.print(f"\nLogin error: {str(e)}", style="bold red")
+            console.print(f"\nLogin to 27crags failed: {str(e)}",
+                          style="bold red")
             return False
 
     def get_html(self, url: str):

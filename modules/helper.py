@@ -146,8 +146,10 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
             style="bold red")
         return None, None, None
 
+    # Create crag instance before starting live display
+    crag = Crag(crag_url, scraper)
+
     with display_progress_with_output():
-        crag = Crag(crag_url, scraper)
         console.print("\nCrag successfully scraped!\n", style="bold green")
 
         # prepare data for google sheets
