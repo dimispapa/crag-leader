@@ -7,7 +7,7 @@ from gspread import WorksheetNotFound, SpreadsheetNotFound, client
 from pyfiglet import figlet_format
 from modules.scraper import Scraper
 from modules.crag import Crag
-from modules.rich_utils import console
+from modules.rich_utils import console, display_progress_with_output
 
 
 def clear():
@@ -145,31 +145,29 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
             style="bold red")
         return None, None, None
 
-    crag = Crag(crag_url, scraper)
-    console.clear()
-    console.print("\nCrag successfully scraped!\n", style="bold green")
+    with display_progress_with_output():
+        crag = Crag(crag_url, scraper)
+        console.print("\nCrag successfully scraped!\n", style="bold green")
 
-    # prepare data for google sheets
-    clear()
-    console.print("\nCompiling data to write to google sheets ...\n",
-                  style="bold yellow")
-    boulder_data, route_data, ascent_data = compile_data(crag)
+        # prepare data for google sheets
+        console.print("\nCompiling data to write to google sheets ...\n",
+                      style="bold yellow")
+        boulder_data, route_data, ascent_data = compile_data(crag)
 
-    # cast the Grade col to string to ensure consistency when
-    # working with grades later
-    route_data['Grade'] = route_data['Grade'].astype('str')
-    ascent_data['Grade'] = ascent_data['Grade'].astype('str')
+        # cast the Grade col to string to ensure consistency when
+        # working with grades later
+        route_data['Grade'] = route_data['Grade'].astype('str')
+        ascent_data['Grade'] = ascent_data['Grade'].astype('str')
 
-    # write data to gsheet
-    clear()
-    console.print("\nWriting data to google sheets ...\n", style="bold yellow")
-    gsc.write_data_to_sheet('data', 'boulders', boulder_data)
-    gsc.write_data_to_sheet('data', 'routes', route_data)
-    gsc.write_data_to_sheet('data', 'ascents', ascent_data)
-    gsc.update_timestamp('data')
-    clear()
-    console.print("\nFinished writing data to google sheets ...\n",
-                  style="bold green")
+        # write data to gsheet
+        console.print("\nWriting data to google sheets ...\n",
+                      style="bold yellow")
+        gsc.write_data_to_sheet('data', 'boulders', boulder_data)
+        gsc.write_data_to_sheet('data', 'routes', route_data)
+        gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+        gsc.update_timestamp('data')
+        console.print("\nFinished writing data to google sheets ...\n",
+                      style="bold green")
 
     return boulder_data, route_data, ascent_data
 

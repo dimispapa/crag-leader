@@ -5,15 +5,27 @@ around of attributes in classes.
 """
 
 from rich.console import Console
-from rich.progress import Progress
+from rich.progress import (Progress, SpinnerColumn, BarColumn, TextColumn,
+                           TimeElapsedColumn, TimeRemainingColumn)
 from rich.table import Table
 from pandas import DataFrame
+from rich.live import Live
 
-# Initialize the Console object
-console = Console()
+# Initialize console with auto-scroll
+console = Console(auto_refresh=True)
 
-# Initialize the Progress object
-progress = Progress(transient=True)
+# Create a more informative progress bar with both elapsed and remaining time
+progress = Progress(
+    SpinnerColumn(),
+    TextColumn("[progress.description]{task.description}"),
+    BarColumn(),
+    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+    TimeElapsedColumn(),  # Shows time elapsed
+    TimeRemainingColumn(),  # Shows estimated time remaining
+    auto_refresh=True,
+    expand=True,
+    transient=False  # Keep progress output visible
+)
 
 
 def display_table(title: str, leaderboard: DataFrame):
@@ -63,5 +75,9 @@ def show_help():
 
     Enter the number corresponding to the option you want to select.
     """
-    console.clear()
     console.print(help_text, style="bold cyan")
+
+
+def display_progress_with_output():
+    """Create a live display that keeps progress bar at top"""
+    return Live(progress, refresh_per_second=10, transient=False)

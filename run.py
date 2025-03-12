@@ -46,46 +46,51 @@ def get_user_choice():
         str: The user's choice ('scrape' or 'retrieve').
     """
     while True:
-        # get the latest timestamp from google sheet file
-        # and handle value error to process a new scrape
         try:
-            timestamp = GSC.get_timestamp('data')
+            # get the latest timestamp + duration from google sheet file
+            # and handle value error to process a new scrape
+            timestamp, duration = GSC.get_timestamp_and_duration('data')
+            duration_msg = ""
+            if duration:
+                duration_msg = \
+                    f"\nLast scrape took approximately {duration} minutes."
+            # prompt user choice.
+            # Case-insesitive and remove leading/trailing spaces
+            choice = Prompt.ask(
+                f"[bold cyan]Crag data has been last updated on: {timestamp}"
+                f"{duration_msg}\n"
+                "Do you want to scrape the latest data from 27crags "
+                "or retrieve existing data? \n"
+                "(Please type 1 for 'scraping latest data' or "
+                "2 for 'retrieving current stored data, then press enter.')"
+            ).strip().lower()
+
+            # check if entry is empty (or spaces):
+            if not choice:
+                clear()
+                console.print(
+                    "\n Invalid choice. You did not enter a value.\n"
+                    "(Please enter 1 for 'scraping latest data' or "
+                    "2 for 'retrieving current stored data'.)\n",
+                    style="bold red")
+
+            # validate user choice
+            elif choice not in ['1', '2']:
+                clear()
+                console.print(
+                    f"\nInvalid choice. You've entered '{choice}'. \n"
+                    "(Please enter 1 for 'scraping latest data' or "
+                    "2 for 'retrieving current stored data'.)\n",
+                    style="bold red")
+            else:
+                return 'scrape' if choice == '1' else 'retrieve'
+
         except ValueError as ve:
             console.print(
                 f"Error retrieving timestamp: {ve}\n"
                 "Processing a new scrape as default option ...\n",
                 style="bold red")
             return 'scrape'
-
-        # prompt user choice.
-        # Case-insesitive and remove leading/trailing spaces
-        choice = Prompt.ask(
-            f"[bold cyan]Crag data has been last updated on: {timestamp}.\n"
-            "Do you want to scrape the latest data from 27crags or retrieve"
-            " existing data? \n"
-            "(Please type 1 for 'scraping latest data' or "
-            "2 for 'retrieving current stored data, then press enter.'.)"
-        ).strip().lower()
-
-        # check if entry is empty (or spaces):
-        if not choice:
-            clear()
-            console.print(
-                "\n Invalid choice. You did not enter a value.\n"
-                "(Please enter 1 for 'scraping latest data' or "
-                "2 for 'retrieving current stored data'.)\n",
-                style="bold red")
-
-        # validate user choice
-        elif choice not in ['1', '2']:
-            clear()
-            console.print(
-                f"\nInvalid choice. You've entered '{choice}'. \n"
-                "(Please enter 1 for 'scraping latest data' or "
-                "2 for 'retrieving current stored data'.)\n",
-                style="bold red")
-        else:
-            return 'scrape' if choice == '1' else 'retrieve'
 
 
 def leaderboard_mode(agg_table: pd.DataFrame,

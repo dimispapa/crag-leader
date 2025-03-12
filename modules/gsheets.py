@@ -64,9 +64,7 @@ class GoogleSheetsClient:
         worksheet = gsheet.worksheet(worksheet_name)
         return worksheet.get_all_records()
 
-    def write_data_to_sheet(self,
-                            gsheet_name: str,
-                            worksheet_name: str,
+    def write_data_to_sheet(self, gsheet_name: str, worksheet_name: str,
                             dataframe: DataFrame):
         """
         Writes data to worksheet in Google Sheet.
@@ -84,35 +82,51 @@ class GoogleSheetsClient:
             worksheet = gsheet.worksheet(worksheet_name)
 
         except gspread.WorksheetNotFound:
-            worksheet = gsheet.add_worksheet(
-                title=worksheet_name, rows=1000, cols=10)
+            worksheet = gsheet.add_worksheet(title=worksheet_name,
+                                             rows=1000,
+                                             cols=10)
 
         # clear the worksheet
         worksheet.clear()
         # write the dataframe to the worksheet
         set_with_dataframe(worksheet, dataframe)
 
-    def update_timestamp(self, gsheet_name: str):
+    def update_timestamp(self,
+                         spreadsheet_name: str,
+                         duration_seconds: float = None):
         """
-        Updates the google sheet with the latest datetime object converted
-        to a timestamp string.
+        Update the last_updated timestamp and duration in the spreadsheet.
 
-        Arg:
-            gsheet_name (str): The name of the google sheet to update.
+        Args:
+            spreadsheet_name (str): The name of the spreadsheet.
+            duration_seconds (float): The duration in seconds.
         """
-        gsheet = self.client.open(gsheet_name)
-        datetime_str = datetime.now().strftime("%b %d %Y %r")
-        gsheet.worksheet('last_updated').update_acell('A1', datetime_str)
+        try:
+            timestamp = datetime.now().strftime("%b %d %Y %H:%M:%S")
+            worksheet = self.client.open(spreadsheet_name).worksheet(
+                'last_updated')
 
-    def get_timestamp(self, gsheet_name: str):
-        """
-        Gets the datetime last updated of a chosen google sheet.
+            # Update timestamp in A1
+            worksheet.update('A1', timestamp)
 
-        Arg:
-            gsheet_name (str): The name of the google sheet to update.
+            # Update duration in A2 if provided
+            if duration_seconds is not None:
+                # Convert to minutes with 1 decimal
+                duration_str = f"{duration_seconds/60:.1f}"
+                worksheet.update('A2', duration_str)
 
-        Returns:
-            str: The last updated timestamp as a string.
-        """
-        gsheet = self.client.open(gsheet_name)
-        return gsheet.worksheet('last_updated').acell('A1').value
+        except Exception as e:
+            print(f"Error updating timestamp: {e}")
+
+    def get_timestamp_and_duration(self, spreadsheet_name: str):
+        """Get the last updated timestamp and duration."""
+        try:
+            worksheet = self.client.open(spreadsheet_name).worksheet(
+                'last_updated')
+            timestamp = worksheet.acell('A1').value
+            duration = worksheet.acell('A2').value
+
+            return timestamp, duration
+
+        except Exception as e:
+            raise ValueError(f"Error retrieving timestamp: {e}")
