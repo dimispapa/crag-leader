@@ -10,6 +10,10 @@ from modules.crag import Crag
 from modules.rich_utils import console, display_progress_with_output
 from typing import Union
 import asyncio
+import aiohttp
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def clear():
@@ -126,47 +130,52 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
 
     scraper = Scraper(headers)
 
-    # Login remains synchronous as it only happens once
+    # Fetch credentials from environment variables
     username = os.environ.get('27CRAGS_USERNAME')
     password = os.environ.get('27CRAGS_PASSWORD')
     useralias = os.environ.get('27CRAGS_USERALIAS')
 
+    # Check if credentials are missing
     if not username or not password:
         console.print("\nMissing 27crags.com credentials.", style="bold red")
+
+    # Login checks remain synchronous
+    if not all([username, password]) or not scraper.login(
+            username, password, useralias):
         return None, None, None
 
-    if not scraper.login(username, password, useralias):
-        console.print("\nFailed to login to 27crags.com.", style="bold red")
-        return None, None, None
+    async with aiohttp.ClientSession() as session:
+        with display_progress_with_output() as live:
+            try:
+                # Create overall progress task
+                overall_task = live.add_task(
+                    "[bold yellow]Overall Progress...", total=100)
 
-    crag = Crag(crag_url, scraper)
+                # Create crag instance with live context
+                crag = Crag(crag_url, scraper, live)
 
-    with display_progress_with_output():
-        # Get boulders asynchronously
-        crag.boulders = await crag.get_boulders_async()
+                # Get boulders and update overall progress
+                await crag.get_boulders_async(session)
+                live.update(overall_task, completed=50)
 
-        # Compile and process data
-        boulder_data, route_data, ascent_data = compile_data(crag)
+                # Compile data and update progress
+                boulder_data, route_data, ascent_data = compile_data(crag)
+                live.update(overall_task, completed=75)
 
-        # cast the Grade col to string to ensure consistency when
-        # working with grades later
-        route_data['Grade'] = route_data['Grade'].astype('str')
-        ascent_data['Grade'] = ascent_data['Grade'].astype('str')
+                # Write to sheets and update final progress
+                clear()
+                console.print("\nWriting data to google sheets ...\n",
+                              style="bold yellow")
+                gsc.write_data_to_sheet('data', 'boulders', boulder_data)
+                gsc.write_data_to_sheet('data', 'routes', route_data)
+                gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+                gsc.update_timestamp('data')
+                live.update(overall_task, completed=100)
 
-        clear()  # Clear before starting Google Sheets operations
-
-        # write data to gsheet
-        console.print("\nWriting data to google sheets ...\n",
-                      style="bold yellow")
-        gsc.write_data_to_sheet('data', 'boulders', boulder_data)
-        gsc.write_data_to_sheet('data', 'routes', route_data)
-        gsc.write_data_to_sheet('data', 'ascents', ascent_data)
-        gsc.update_timestamp('data')
-        console.print("\nFinished writing data to google sheets ...\n",
-                      style="bold green")
-
-    clear()  # Final clear before returning data
-    return boulder_data, route_data, ascent_data
+                return boulder_data, route_data, ascent_data
+            except Exception as e:
+                logger.error(f"Error during scraping: {str(e)}")
+                return None, None, None
 
 
 def scrape_data(headers: dict, crag_url: str, gsc: client):

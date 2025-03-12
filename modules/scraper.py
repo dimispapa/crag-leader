@@ -37,7 +37,7 @@ class Scraper:
             headers (dict): The HTTP headers to use for the requests.
         """
         self.headers = headers
-        self.session = requests.Session()
+        self.session = None  # Will be set when creating aiohttp session
         self.is_authenticated = False
         self.last_request_time = 0
         self.login_url = "https://27crags.com/login"
@@ -45,6 +45,7 @@ class Scraper:
         self.min_request_interval = int(os.getenv("MIN_REQUEST_INTERVAL"))
         self.max_retries = int(os.getenv("MAX_RETRIES"))
         self.retry_delay = int(os.getenv("RETRY_DELAY"))
+        self._rate_limit_lock = asyncio.Lock()  # Add lock for rate limiting
 
     def _rate_limit(self):
         """
@@ -243,11 +244,21 @@ class Scraper:
 
         return results
 
+    async def _async_rate_limit(self):
+        """Thread-safe async rate limiting"""
+        async with self._rate_limit_lock:  # Use lock to ensure thread safety
+            current_time = time.time()
+            time_since_last_request = current_time - self.last_request_time
+            if time_since_last_request < self.min_request_interval:
+                await asyncio.sleep(self.min_request_interval -
+                                    time_since_last_request)
+            self.last_request_time = time.time()
+
     async def get_html_async(self, url: str, session: aiohttp.ClientSession):
         """Async version of get_html with retry logic."""
         for attempt in range(self.max_retries):
             try:
-                await self._async_rate_limit()
+                await self._async_rate_limit()  # Now thread-safe
 
                 if attempt > 0:
                     console.print(
@@ -257,7 +268,8 @@ class Scraper:
                 async with session.get(url, headers=self.headers) as response:
                     if response.status == 429:
                         wait_time = int(
-                            response.headers.get('Retry-After', self.retry_delay))
+                            response.headers.get('Retry-After',
+                                                 self.retry_delay))
                         console.print(
                             f"\nRate limit reached. Waiting {wait_time} seconds...",
                             style="bold yellow")
@@ -280,17 +292,11 @@ class Scraper:
                     style="bold yellow")
                 await asyncio.sleep(self.retry_delay)
 
-        raise Exception(f"Failed to fetch {url} after {self.max_retries} attempts")
+        raise Exception(
+            f"Failed to fetch {url} after {self.max_retries} attempts")
 
-    async def _async_rate_limit(self):
-        """Async version of rate limiting"""
-        current_time = time.time()
-        time_since_last_request = current_time - self.last_request_time
-        if time_since_last_request < self.min_request_interval:
-            await asyncio.sleep(self.min_request_interval - time_since_last_request)
-        self.last_request_time = time.time()
-
-    async def get_json_html_async(self, url: str, session: aiohttp.ClientSession):
+    async def get_json_html_async(self, url: str,
+                                  session: aiohttp.ClientSession):
         """Async version of get_json_html"""
         await self._async_rate_limit()
         async with session.get(url, headers=self.headers) as response:

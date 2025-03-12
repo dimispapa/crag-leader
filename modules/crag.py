@@ -25,7 +25,7 @@ class Crag:
         boulders (list): List of Boulder instances associated with the crag.
     """
 
-    def __init__(self, crag_url: str, scraper: Scraper):
+    def __init__(self, crag_url: str, scraper: Scraper, live=None):
         """
         Initialize Crag class instance.
 
@@ -40,6 +40,7 @@ class Crag:
         # get the base 27crags domain url for use later in url navigation
         self.base_url = self.crag_url.split(".com")[0] + ".com"
         self.scraper = scraper
+        self.live = live
         # define full url containing routelist
         self.routelist_url = f"{self.crag_url}routelist"
         # call get_boulders method and pass boulders list as a crag attribute
@@ -89,7 +90,7 @@ class Crag:
                 boulder_url = self.base_url + boulder_elem['href']
                 # Create a Boulder instance for each boulder
                 boulder = Boulder(boulder_name, boulder_url, self.base_url,
-                                  self.scraper)
+                                  self.scraper, self.live)
                 # Add the Boulder instance to the list
                 boulders.append(boulder)
 
@@ -104,47 +105,45 @@ class Crag:
         # Return the list of Boulder instances
         return boulders
 
-    async def get_boulders_async(self, batch_size=3):
-        """Get boulders asynchronously in batches"""
+    async def get_boulders_async(self, session: aiohttp.ClientSession):
+        """Get boulders asynchronously"""
         console.print(
             f'\nScraping boulder list from "{self.routelist_url} "'
             'crag...\n',
             style="bold yellow")
 
-        async with aiohttp.ClientSession() as session:
-            soup = await self.scraper.get_html_async(self.routelist_url,
-                                                     session)
-            boulder_elements = soup.find_all('a',
-                                             attrs={'class':
-                                                    'sector-item'})[1:]
-            total_boulders = len(boulder_elements)
+        soup = await self.scraper.get_html_async(self.routelist_url, session)
+        boulder_elements = soup.find_all('a', attrs={'class':
+                                                     'sector-item'})[1:]
+        total_boulders = len(boulder_elements)
 
-            task = progress.add_task("[yellow]Scraping crag data...",
-                                     total=total_boulders)
-            boulders = []
+        # Create progress task in live context if available
+        task_id = None
+        if self.live:
+            task_id = self.live.add_task("[yellow]Scraping crag data...",
+                                         total=total_boulders)
 
-            for i in range(0, total_boulders, batch_size):
-                batch = boulder_elements[i:i + batch_size]
-                tasks = []
+        batch_size = 3
+        for i in range(0, total_boulders, batch_size):
+            batch = boulder_elements[i:i + batch_size]
+            batch_tasks = []
 
-                for boulder_elem in batch:
-                    boulder_name = boulder_elem.find('div',
-                                                     attrs={
-                                                         'class': 'name'
-                                                     }).text.strip()
-                    console.print(
-                        f'\nProcessing boulder info for "{boulder_name}" ...\n',
-                        style="bold yellow")
-                    boulder_url = self.base_url + boulder_elem['href']
+            for boulder_elem in batch:
+                boulder_name = boulder_elem.find('div',
+                                                 attrs={
+                                                     'class': 'name'
+                                                 }).text.strip()
+                boulder_url = self.base_url + boulder_elem['href']
 
-                    boulder = Boulder(boulder_name, boulder_url, self.base_url,
-                                      self.scraper)
-                    boulders.append(boulder)
-                    tasks.append(boulder.async_init(session))
+                boulder = Boulder(boulder_name, boulder_url, self.base_url,
+                                  self.scraper, self.live)
+                self.boulders.append(boulder)
+                batch_tasks.append(boulder.async_init(session))
 
-                # Process batch concurrently
-                await asyncio.gather(*tasks)
-                progress.update(task,
-                                completed=min(i + batch_size, total_boulders))
+            await asyncio.gather(*batch_tasks)
 
-            return boulders
+            if self.live and task_id is not None:
+                self.live.update(task_id,
+                                 completed=min(i + len(batch), total_boulders))
+
+        return self.boulders

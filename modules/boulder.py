@@ -9,6 +9,7 @@ from modules.route import Route
 import time
 import asyncio
 from modules.loggers import logger
+import aiohttp
 
 
 class Boulder:
@@ -25,7 +26,12 @@ class Boulder:
                         boulder.
     """
 
-    def __init__(self, name: str, url: str, base_url: str, scraper: Scraper):
+    def __init__(self,
+                 name: str,
+                 url: str,
+                 base_url: str,
+                 scraper: Scraper,
+                 live=None):
         """
         Initialize Boulder class instance.
 
@@ -42,15 +48,16 @@ class Boulder:
         self.url = url
         self.base_url = base_url
         self.scraper = scraper
+        self.live = live
         self.routes = []
 
-    async def async_init(self, session):
-        """Async initialization"""
+    async def async_init(self, session: aiohttp.ClientSession):
+        """Initialize routes asynchronously"""
         self.routes = await self.get_routes_async(session)
         return self
 
-    async def get_routes_async(self, session, batch_size=3):
-        """Async version of get_routes"""
+    async def get_routes_async(self, session: aiohttp.ClientSession):
+        """Get routes asynchronously"""
         console.print(f'\nExtracting routes for "{self.name}"...\n',
                       style="bold yellow")
 
@@ -61,6 +68,13 @@ class Boulder:
         if routes_table_tbody:
             tr_elements = routes_table_tbody.find_all('tr')
 
+            task_id = None
+            if self.live:
+                task_id = self.live.add_task(
+                    f"[cyan]Processing routes for {self.name}...",
+                    total=len(tr_elements))
+
+            batch_size = 3
             for i in range(0, len(tr_elements), batch_size):
                 batch = tr_elements[i:i + batch_size]
                 batch_tasks = []
@@ -70,13 +84,19 @@ class Boulder:
                         tr_element, session)
                     if route:
                         routes.append(route)
+                        batch_tasks.append(route.async_init(session))
 
                 await asyncio.gather(*batch_tasks)
+
+                if self.live and task_id is not None:
+                    self.live.update(task_id,
+                                     completed=min(i + len(batch),
+                                                   len(tr_elements)))
 
         return routes
 
     async def _process_route_element(self, tr_element, session):
-        """Process a single route element asynchronously"""
+        """Process a single route element"""
         try:
             anchor = tr_element.find('a')
             route_name = anchor.text.strip()
@@ -90,10 +110,9 @@ class Boulder:
                 'class': 'rating'
             }).text.strip()
 
-            route = Route(route_name, route_url, self.base_url, grade,
-                          int(no_of_ascents), float(rating), self.scraper)
-            await route.async_init(session)
-            return route
+            return Route(route_name, route_url, self.base_url, grade,
+                         int(no_of_ascents), float(rating), self.scraper,
+                         self.live)
         except Exception as e:
             logger.error(f"Error processing route: {str(e)}")
             return None
