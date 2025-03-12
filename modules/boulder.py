@@ -70,11 +70,13 @@ class Boulder:
 
             # Create task for this boulder's routes
             task_id = progress.add_task(
-                f"[cyan]Processing routes for {self.name}...",
-                total=len(tr_elements))
+                f"[cyan]Processing {self.name}...",  # Shortened description
+                total=len(tr_elements),
+                visible=True  # Ensure visibility
+            )
 
             batch_size = 3
-            processed_count = 0  # Track how many routes we've processed
+            processed_count = 0
 
             for i in range(0, len(tr_elements), batch_size):
                 batch = tr_elements[i:i + batch_size]
@@ -84,13 +86,13 @@ class Boulder:
                         tr_element, session)
                     if route:
                         routes.append(route)
-                    # Increment counter for each processed route
                     processed_count += 1
-                    # Update progress after each route
                     progress.update(task_id, completed=processed_count)
 
-                # Optional: Add a small delay between batches if needed
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)  # Small delay between batches
+
+            # Remove this task when boulder is complete
+            progress.remove_task(task_id)
 
         return routes
 

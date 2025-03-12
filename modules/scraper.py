@@ -41,8 +41,8 @@ class Scraper:
         self.is_authenticated = False
         self.last_request_time = 0
         self.login_url = "https://27crags.com/login"
-        # Get environment variables
-        self.min_request_interval = int(os.getenv("MIN_REQUEST_INTERVAL"))
+        # Change to float for more precise intervals
+        self.min_request_interval = float(os.getenv("MIN_REQUEST_INTERVAL"))
         self.max_retries = int(os.getenv("MAX_RETRIES"))
         self.retry_delay = int(os.getenv("RETRY_DELAY"))
         self._rate_limit_lock = asyncio.Lock()  # Add lock for rate limiting

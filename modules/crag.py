@@ -116,15 +116,18 @@ class Crag:
                                                      'sector-item'})[1:]
         total_boulders = len(boulder_elements)
 
-        # Use global progress object for task creation
-        task_id = progress.add_task("[yellow]Scraping crag data...",
-                                    total=total_boulders)
+        # Create overall progress task first - this will stay at the bottom
+        overall_task = progress.add_task("[yellow]Overall Progress...",
+                                         total=total_boulders)
 
         batch_size = 3
+        completed_boulders = 0
+
         for i in range(0, total_boulders, batch_size):
             batch = boulder_elements[i:i + batch_size]
             batch_tasks = []
 
+            # Process each boulder in the batch
             for boulder_elem in batch:
                 boulder_name = boulder_elem.find('div',
                                                  attrs={
@@ -133,13 +136,13 @@ class Crag:
                 boulder_url = self.base_url + boulder_elem['href']
 
                 boulder = Boulder(boulder_name, boulder_url, self.base_url,
-                                  self.scraper, self.live)
+                                  self.scraper)
                 self.boulders.append(boulder)
                 batch_tasks.append(boulder.async_init(session))
 
+            # Wait for the batch to complete
             await asyncio.gather(*batch_tasks)
-
-            progress.update(task_id,
-                            completed=min(i + len(batch), total_boulders))
+            completed_boulders += len(batch)
+            progress.update(overall_task, completed=completed_boulders)
 
         return self.boulders
