@@ -55,10 +55,12 @@ def welcome_msg():
     ascii_art = figlet_format("Crag Leader", font='doom')
     console.print(ascii_art, style="bold green")
 
-    console.print("Welcome to the CRAG LEADER application.\nA leaderboard "
-                  "designed for boulderers who log their ascents on 27crags, "
-                  "on the Inia & Droushia crag in Cyprus!"
-                  "\n", style="bold cyan")
+    console.print(
+        "Welcome to the CRAG LEADER application.\nA leaderboard "
+        "designed for boulderers who log their ascents on 27crags, "
+        "on the Inia & Droushia crag in Cyprus!"
+        "\n",
+        style="bold cyan")
 
 
 def compile_data(crag: Crag):
@@ -75,13 +77,10 @@ def compile_data(crag: Crag):
     """
     # Create a DataFrame for boulders with their names, URLs,
     # and lists of associated routes
-    boulder_data = pd.DataFrame([(b.name,
-                                  b.url,
-                                  [route.name for route in b.routes])
-                                 for b in crag.boulders],
-                                columns=["Boulder Name",
-                                         "Boulder URL",
-                                         "Route List"])
+    boulder_data = pd.DataFrame(
+        [(b.name, b.url, [route.name for route in b.routes])
+         for b in crag.boulders],
+        columns=["Boulder Name", "Boulder URL", "Route List"])
 
     # Initialize lists to hold route and ascent data
     route_data = []
@@ -92,43 +91,29 @@ def compile_data(crag: Crag):
         # Iterate through each route in the current boulder
         for route in boulder.routes:
             # Append route information to route_data list
-            route_data.append(
-                (route.name,
-                 boulder.name,
-                 route.url,
-                 route.grade,
-                 route.ascents,
-                 route.rating))
+            route_data.append((route.name, boulder.name, route.url,
+                               route.grade, route.ascents, route.rating))
             # Iterate through each ascent log in the current route
             for ascent in route.ascent_log:
                 # Append ascent information to ascent_data list
                 ascent_data.append(
-                    (route.name,
-                     route.grade,
-                     boulder.name,
-                     ascent['climber_name'],
-                     ascent['ascent_type'],
+                    (route.name, route.grade, boulder.name,
+                     ascent['climber_name'], ascent['ascent_type'],
                      ascent['ascent_date'].strftime('%Y-%m-%d')))
 
     # Create DataFrame for route data
-    route_data = pd.DataFrame(
-        route_data,
-        columns=["Route Name",
-                 "Boulder Name",
-                 "Route URL",
-                 "Grade",
-                 "Ascents",
-                 "Rating"])
+    route_data = pd.DataFrame(route_data,
+                              columns=[
+                                  "Route Name", "Boulder Name", "Route URL",
+                                  "Grade", "Ascents", "Rating"
+                              ])
 
     # Create DataFrame for ascent data
-    ascent_data = pd.DataFrame(
-        ascent_data,
-        columns=["Route Name",
-                 "Grade",
-                 "Boulder Name",
-                 "Climber Name",
-                 "Ascent Type",
-                 "Ascent Date"])
+    ascent_data = pd.DataFrame(ascent_data,
+                               columns=[
+                                   "Route Name", "Grade", "Boulder Name",
+                                   "Climber Name", "Ascent Type", "Ascent Date"
+                               ])
 
     return boulder_data, route_data, ascent_data
 
@@ -140,6 +125,24 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     """
     # Initialize a scraper instance and store data in an object
     scraper = Scraper(headers)
+
+    # Get credentials from environment variables
+    username = os.environ.get('27CRAGS_USERNAME')
+    password = os.environ.get('27CRAGS_PASSWORD')
+
+    if not username or not password:
+        console.print(
+            "\nMissing 27crags.com credentials in environment variables.\n",
+            style="bold red")
+        return None, None, None
+
+    # Attempt login
+    if not scraper.login(username, password):
+        console.print(
+            "\nFailed to login to 27crags.com. Please check your credentials.\n",
+            style="bold red")
+        return None, None, None
+
     crag = Crag(crag_url, scraper)
     console.clear()
     console.print("\nCrag successfully scraped!\n", style="bold green")
@@ -181,12 +184,9 @@ def retrieve_data(gsc: client):
     console.print("\nRetrieving data...\n", style="bold yellow")
     # Retrieve data from worksheets
     try:
-        boulder_data = pd.DataFrame(
-            gsc.get_sheet_data('data', 'boulders'))
-        route_data = pd.DataFrame(
-            gsc.get_sheet_data('data', 'routes'))
-        ascent_data = pd.DataFrame(
-            gsc.get_sheet_data('data', 'ascents'))
+        boulder_data = pd.DataFrame(gsc.get_sheet_data('data', 'boulders'))
+        route_data = pd.DataFrame(gsc.get_sheet_data('data', 'routes'))
+        ascent_data = pd.DataFrame(gsc.get_sheet_data('data', 'ascents'))
 
         # cast the Grade col to string to ensure consistency when
         # working with grades later
@@ -195,16 +195,20 @@ def retrieve_data(gsc: client):
 
     except WorksheetNotFound:
         clear()
-        return console.print('Error: The data does '
-                             'not exist. Please choose the "scrape" option to '
-                             'retrieve data from 27crags.\n', style="bold red")
+        return console.print(
+            'Error: The data does '
+            'not exist. Please choose the "scrape" option to '
+            'retrieve data from 27crags.\n',
+            style="bold red")
 
     except SpreadsheetNotFound:
         clear()
-        return console.print('Error: The Google Sheet file '
-                             'does not exist, please create a Google sheet '
-                             'file with name "data" and then choose '
-                             'to "scrape".\n', style="bold red")
+        return console.print(
+            'Error: The Google Sheet file '
+            'does not exist, please create a Google sheet '
+            'file with name "data" and then choose '
+            'to "scrape".\n',
+            style="bold red")
     clear()
     console.print("\nData retrieval completed.\n", style="bold green")
 
