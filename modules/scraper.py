@@ -38,9 +38,9 @@ class Scraper:
         self.is_authenticated = False
         self.last_request_time = 0
         self.login_url = "https://27crags.com/login"
-        self.min_request_interval = 3  # seconds
+        self.min_request_interval = 1  # seconds
         self.max_retries = 3
-        self.retry_delay = 5  # seconds
+        self.retry_delay = 3  # seconds
 
     def _rate_limit(self):
         """

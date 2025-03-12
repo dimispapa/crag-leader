@@ -158,7 +158,7 @@ class Route:
                     continue
 
         else:
-            console.print(f'no logs for route: {self.name}',
+            console.print(f'\t\tNo logs found for route: {self.name}',
                           style="bold yellow")
 
         return ascent_log
