@@ -111,8 +111,7 @@ class Boulder:
             }).text.strip()
 
             return Route(route_name, route_url, self.base_url, grade,
-                         int(no_of_ascents), float(rating), self.scraper,
-                         self.live)
+                         int(no_of_ascents), float(rating), self.scraper)
         except Exception as e:
             logger.error(f"Error processing route: {str(e)}")
             return None
