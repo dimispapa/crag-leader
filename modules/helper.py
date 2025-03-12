@@ -7,7 +7,7 @@ from gspread import WorksheetNotFound, SpreadsheetNotFound, client
 from pyfiglet import figlet_format
 from modules.scraper import Scraper
 from modules.crag import Crag
-from modules.rich_utils import console, display_progress_with_output
+from modules.rich_utils import console
 from typing import Union
 import asyncio
 import aiohttp
@@ -153,37 +153,29 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
     logger.debug("Login successful, proceeding with scraping")
 
     async with aiohttp.ClientSession() as session:
-        with display_progress_with_output() as live:
-            try:
-                # Create overall progress task
-                overall_task = live.add_task(
-                    "[bold yellow]Overall Progress...", total=100)
+        try:
+            # Create crag instance without progress context
+            crag = Crag(crag_url, scraper)
 
-                # Create crag instance with live context
-                crag = Crag(crag_url, scraper, live)
+            # Get boulders
+            await crag.get_boulders_async(session)
 
-                # Get boulders and update overall progress
-                await crag.get_boulders_async(session)
-                live.update(overall_task, completed=50)
+            # Compile data
+            boulder_data, route_data, ascent_data = compile_data(crag)
 
-                # Compile data and update progress
-                boulder_data, route_data, ascent_data = compile_data(crag)
-                live.update(overall_task, completed=75)
+            # Write to sheets
+            clear()
+            console.print("\nWriting data to google sheets ...\n",
+                          style="bold yellow")
+            gsc.write_data_to_sheet('data', 'boulders', boulder_data)
+            gsc.write_data_to_sheet('data', 'routes', route_data)
+            gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+            gsc.update_timestamp('data')
 
-                # Write to sheets and update final progress
-                clear()
-                console.print("\nWriting data to google sheets ...\n",
-                              style="bold yellow")
-                gsc.write_data_to_sheet('data', 'boulders', boulder_data)
-                gsc.write_data_to_sheet('data', 'routes', route_data)
-                gsc.write_data_to_sheet('data', 'ascents', ascent_data)
-                gsc.update_timestamp('data')
-                live.update(overall_task, completed=100)
-
-                return boulder_data, route_data, ascent_data
-            except Exception as e:
-                logger.error(f"Error during scraping: {str(e)}")
-                return None, None, None
+            return boulder_data, route_data, ascent_data
+        except Exception as e:
+            logger.error(f"Error during scraping: {str(e)}")
+            return None, None, None
 
 
 def scrape_data(headers: dict, crag_url: str, gsc: client):

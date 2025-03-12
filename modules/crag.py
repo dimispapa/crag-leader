@@ -48,7 +48,8 @@ class Crag:
             "Please wait while the scraper is retrieving info "
             f"from '{self.crag_url}' ...\n",
             style="bold yellow")
-        self.boulders = self.get_boulders()
+        self.boulders = [
+        ]  # Initialize empty list, will be populated by get_boulders_async
         self.progress = progress
 
     def get_boulders(self, batch_size=3):
