@@ -38,18 +38,6 @@ live = Live(
 )
 
 
-def display_progress_with_output():
-    """Create a live display with fixed progress bar at bottom"""
-    return Live(
-        progress,
-        console=console,
-        refresh_per_second=10,
-        transient=True,  # Keep progress bar transient
-        auto_refresh=True,  # Enable auto-refresh
-        vertical_overflow="visible"  # Allow content to scroll
-    )
-
-
 def display_table(title: str, leaderboard: DataFrame):
     """
     Display a leaderboard using a Rich table with the specified title.

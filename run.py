@@ -9,7 +9,7 @@ from time import sleep
 import pandas as pd
 from rich.prompt import Prompt
 from gspread import exceptions
-from modules.rich_utils import console, progress, display_table, show_help
+from modules.rich_utils import console, display_table, show_help
 from modules.gsheets import GoogleSheetsClient
 from modules.score import ScoreCalculator
 from modules.helper import (scrape_data, retrieve_data, clear, welcome_msg,
@@ -282,13 +282,9 @@ def main():
     choice = get_user_choice()
 
     # if user choses to scrape, then call scrape_data function
-    # and then retrieve_data to print to console
     if choice == 'scrape':
-        # open the progress context manager to track scraping
-        with progress:
-            # scrape and return data
-            boulder_data, route_data, ascent_data = scrape_data(
-                HEADERS, CRAG_URL, GSC)
+        boulder_data, route_data, ascent_data = scrape_data(
+            HEADERS, CRAG_URL, GSC)
 
         # Add error handling
         if boulder_data is None:

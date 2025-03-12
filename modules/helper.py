@@ -159,13 +159,13 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
         try:
             # Create crag instance
             crag = Crag(crag_url, scraper)
-            
+
             # Get boulders asynchronously
             await crag.get_boulders_async(session)
-            
+
             # Compile data
             boulder_data, route_data, ascent_data = compile_data(crag)
-            
+
             # Write to sheets
             clear()
             console.print("\nWriting data to google sheets ...\n",
@@ -174,7 +174,7 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
             gsc.write_data_to_sheet('data', 'routes', route_data)
             gsc.write_data_to_sheet('data', 'ascents', ascent_data)
             gsc.update_timestamp('data')
-            
+
             return boulder_data, route_data, ascent_data
         except Exception as e:
             logger.error(f"Error during scraping: {str(e)}")
