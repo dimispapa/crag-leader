@@ -78,10 +78,14 @@ class Scraper:
             # Get CSRF token from meta tag
             csrf_meta = soup.find('meta', {'name': 'csrf-token'})
             if not csrf_meta:
-                logger.error("Could not find CSRF token")
+                logger.error("Could not find CSRF token meta tag")
                 return False
 
             csrf_token = csrf_meta.get('content')
+            if not csrf_token:
+                logger.error("CSRF token not found in meta tag")
+                return False
+
             logger.debug(f"Got CSRF token: {csrf_token[:10]}...")
 
             # Prepare login data
