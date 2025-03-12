@@ -27,6 +27,16 @@ progress = Progress(
     transient=True  # Make it transient so it stays in place
 )
 
+# Create a single global Live instance
+live = Live(
+    progress,
+    console=console,
+    refresh_per_second=10,
+    transient=True,
+    auto_refresh=True,
+    vertical_overflow="visible"
+)
+
 
 def display_progress_with_output():
     """Create a live display with fixed progress bar at bottom"""

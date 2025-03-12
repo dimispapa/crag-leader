@@ -3,7 +3,7 @@ The Boulder class with stored attributes on initialization and methods to
 extract information regarding the routes contained in a boulder, by
 initializing a Route instance for each route related to a Boulder instance.
 """
-from modules.rich_utils import console
+from modules.rich_utils import console, progress
 from modules.scraper import Scraper
 from modules.route import Route
 import time
@@ -67,11 +67,10 @@ class Boulder:
         if routes_table_tbody:
             tr_elements = routes_table_tbody.find_all('tr')
 
-            task_id = None
-            if self.live:
-                task_id = self.live.add_task(
-                    f"[cyan]Processing routes for {self.name}...",
-                    total=len(tr_elements))
+            # Use global progress object for task creation
+            task_id = progress.add_task(
+                f"[cyan]Processing routes for {self.name}...",
+                total=len(tr_elements))
 
             batch_size = 3
             for i in range(0, len(tr_elements), batch_size):

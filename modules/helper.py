@@ -12,8 +12,7 @@ from typing import Union
 import asyncio
 import aiohttp
 import logging
-from rich.progress import Progress, BarColumn, TimeRemainingColumn
-from rich.live import Live
+from modules.rich_utils import live
 
 logger = logging.getLogger(__name__)
 
@@ -153,38 +152,36 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
 
     logger.debug("Login successful, proceeding with scraping")
 
-    # Create a new Progress instance for this scraping session
-    progress = Progress("[progress.description]{task.description}",
-                        BarColumn(),
-                        "[progress.percentage]{task.percentage:>3.0f}%",
-                        TimeRemainingColumn(),
-                        console=console)
+    # Start the live display
+    live.start()
 
     async with aiohttp.ClientSession() as session:
-        with Live(progress, console=console, refresh_per_second=10) as live:
-            try:
-                # Create crag instance with progress
-                crag = Crag(crag_url, scraper, live)
-
-                # Get boulders asynchronously
-                await crag.get_boulders_async(session)
-
-                # Compile data
-                boulder_data, route_data, ascent_data = compile_data(crag)
-
-                # Write to sheets
-                clear()
-                console.print("\nWriting data to google sheets ...\n",
-                              style="bold yellow")
-                gsc.write_data_to_sheet('data', 'boulders', boulder_data)
-                gsc.write_data_to_sheet('data', 'routes', route_data)
-                gsc.write_data_to_sheet('data', 'ascents', ascent_data)
-                gsc.update_timestamp('data')
-
-                return boulder_data, route_data, ascent_data
-            except Exception as e:
-                logger.error(f"Error during scraping: {str(e)}")
-                return None, None, None
+        try:
+            # Create crag instance
+            crag = Crag(crag_url, scraper)
+            
+            # Get boulders asynchronously
+            await crag.get_boulders_async(session)
+            
+            # Compile data
+            boulder_data, route_data, ascent_data = compile_data(crag)
+            
+            # Write to sheets
+            clear()
+            console.print("\nWriting data to google sheets ...\n",
+                          style="bold yellow")
+            gsc.write_data_to_sheet('data', 'boulders', boulder_data)
+            gsc.write_data_to_sheet('data', 'routes', route_data)
+            gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+            gsc.update_timestamp('data')
+            
+            return boulder_data, route_data, ascent_data
+        except Exception as e:
+            logger.error(f"Error during scraping: {str(e)}")
+            return None, None, None
+        finally:
+            # Stop the live display
+            live.stop()
 
 
 def scrape_data(headers: dict, crag_url: str, gsc: client):

@@ -116,11 +116,9 @@ class Crag:
                                                      'sector-item'})[1:]
         total_boulders = len(boulder_elements)
 
-        # Create progress task in live context if available
-        task_id = None
-        if self.live:
-            task_id = self.live.add_task("[yellow]Scraping crag data...",
-                                         total=total_boulders)
+        # Use global progress object for task creation
+        task_id = progress.add_task("[yellow]Scraping crag data...",
+                                    total=total_boulders)
 
         batch_size = 3
         for i in range(0, total_boulders, batch_size):
@@ -141,8 +139,7 @@ class Crag:
 
             await asyncio.gather(*batch_tasks)
 
-            if self.live and task_id is not None:
-                self.live.update(task_id,
-                                 completed=min(i + len(batch), total_boulders))
+            progress.update(task_id,
+                            completed=min(i + len(batch), total_boulders))
 
         return self.boulders
