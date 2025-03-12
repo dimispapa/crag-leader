@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import os
+from loggers import logger
 
 
 class Scraper:
@@ -59,50 +60,78 @@ class Scraper:
         return response.status_code == 200
 
     def login(self, username: str, password: str, useralias: str):
-        """Login and maintain session"""
+        """Login to 27crags.com using provided credentials."""
         login_url = "https://27crags.com/login"
         self.useralias = useralias
 
         try:
-            # Get CSRF token
+            # First get the login page to obtain CSRF token
+            logger.debug("Attempting to get login page")
+            self._rate_limit()
             login_page = self.session.get(login_url, headers=self.headers)
-            soup = BeautifulSoup(login_page.content, 'html5lib')
-            csrf_meta = soup.find('meta', {'name': 'csrf-token'})
 
+            if login_page.status_code != 200:
+                logger.error(
+                    f"Failed to load login page. Status code: {login_page.status_code}"
+                )
+                return False
+
+            soup = BeautifulSoup(login_page.content, 'html5lib')
+
+            # Get CSRF token from meta tag
+            csrf_meta = soup.find('meta', {'name': 'csrf-token'})
             if not csrf_meta:
-                raise ValueError("Could not find CSRF token")
+                logger.error("Could not find CSRF token")
+                return False
 
             csrf_token = csrf_meta.get('content')
+            logger.debug(f"Got CSRF token: {csrf_token[:10]}...")
 
-            # Enhanced headers for login
-            login_headers = {
-                **self.headers, 'Accept':
-                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-Token': csrf_token
-            }
-
-            # Login data
+            # Prepare login data
             login_data = {
                 'authenticity_token': csrf_token,
                 'web_user[username]': username,
                 'web_user[password]': password,
                 'web_user[remember_me]': '1'
             }
+            logger.debug("Prepared login data")
 
-            # Submit login
+            # Add required headers
+            enhanced_headers = {
+                **self.headers, 'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-Token': csrf_token
+            }
+            logger.debug("Enhanced headers prepared")
+
+            # Perform login
+            logger.debug("Attempting login request")
+            self._rate_limit()
             response = self.session.post(login_url,
                                          data=login_data,
-                                         headers=login_headers,
+                                         headers=enhanced_headers,
                                          allow_redirects=True)
 
-            # Verify login success
-            self.is_authenticated = self.check_auth()
-            return self.is_authenticated
+            logger.debug(f"Login response status: {response.status_code}")
+            logger.debug(f"Login response URL: {response.url}")
+
+            # Check if login was successful
+            if "/dashboard" in response.url or "climbers/dashboard" in response.url:
+                logger.info("Login successful")
+                return True
+
+            if "Invalid email or password" in response.text:
+                logger.error("Login failed: Invalid credentials")
+            else:
+                logger.error(
+                    f"Login failed: Unknown reason. Response URL: {response.url}"
+                )
+
+            return False
 
         except Exception as e:
-            print(f"Login error: {str(e)}")
-            self.is_authenticated = False
+            logger.exception(f"Login error: {str(e)}")
             return False
 
     def get_html(self, url: str):
