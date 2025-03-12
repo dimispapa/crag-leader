@@ -251,7 +251,8 @@ def main():
         # Add error handling
         if boulder_data is None:
             console.print(
-                "\nScraping failed. Please try using the 'retrieve' option or try again later.\n",
+                "\nScraping failed. Please try using the 'retrieve' "
+                "option or try again later.\n",
                 style="bold red")
             return  # Exit the function
 

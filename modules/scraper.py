@@ -9,8 +9,10 @@ import json
 import requests
 from bs4 import BeautifulSoup
 import time
-import os
 from modules.loggers import logger
+from rich.console import Console
+
+console = Console()
 
 
 class Scraper:
@@ -42,7 +44,8 @@ class Scraper:
 
     def _rate_limit(self):
         """
-        Ensures requests are spaced out by at least min_request_interval seconds.
+        Ensures requests are spaced out by at least
+        min_request_interval seconds.
         """
         current_time = time.time()
         time_since_last_request = current_time - self.last_request_time
@@ -62,7 +65,8 @@ class Scraper:
 
             if login_page.status_code != 200:
                 logger.error(
-                    f"Failed to load login page. Status code: {login_page.status_code}"
+                    f"Failed to load login page. "
+                    f"Status code: {login_page.status_code}"
                 )
                 return False
 
@@ -89,7 +93,8 @@ class Scraper:
             # Add required headers
             enhanced_headers = {
                 **self.headers, 'Accept':
-                'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'text/html,application/xhtml+xml,application/xml;q=0.9,'
+                '*/*;q=0.8',
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRF-Token': csrf_token
             }
@@ -106,7 +111,8 @@ class Scraper:
             logger.debug(f"Login response status: {response.status_code}")
             logger.debug(f"Login response URL: {response.url}")
 
-            # Check login success by looking for logged-in indicators in the page
+            # Check login success by looking
+            # for logged-in indicators in the page
             soup = BeautifulSoup(response.content, 'html5lib')
 
             # Check multiple indicators of successful login
@@ -123,18 +129,21 @@ class Scraper:
 
             if is_logged_in:
                 self.is_authenticated = True
+                console.print("\nLogin successful!", style="bold green")
                 return True
 
             # If login failed, check for specific error message
             if "Invalid email or password" in response.text:
-                print("Login failed: Invalid credentials")
+                console.print("\nLogin failed: Invalid credentials",
+                              style="bold red")
             else:
-                print("Login failed: Could not verify login success")
+                console.print("\nLogin failed: Could not verify login success",
+                              style="bold red")
 
             return False
 
         except Exception as e:
-            print(f"Login error: {str(e)}")
+            console.print(f"\nLogin error: {str(e)}", style="bold red")
             return False
 
     def get_html(self, url: str):
@@ -144,15 +153,22 @@ class Scraper:
 
         for attempt in range(max_retries):
             try:
-                self._rate_limit()  # Enforce rate limiting
+                self._rate_limit()
+
+                if attempt > 0:
+                    console.print(
+                        f"\nRetry attempt {attempt} of {max_retries-1}...",
+                        style="bold yellow")
+
                 response = self.session.get(url, headers=self.headers)
 
                 if response.status_code == 429:
                     wait_time = int(
                         response.headers.get('Retry-After', retry_delay))
-                    print(
-                        f"\nRate limited. Waiting {wait_time} seconds before retrying..."
-                    )
+                    console.print(
+                        f"\nRate limit reached. Waiting {wait_time} "
+                        "seconds...",
+                        style="bold yellow")
                     time.sleep(wait_time)
                     continue
 
@@ -161,12 +177,16 @@ class Scraper:
                 return BeautifulSoup(response.content, 'html5lib')
 
             except requests.exceptions.RequestException as e:
-                if attempt == max_retries - 1:  # Last attempt
-                    raise Exception(
-                        f"Failed to fetch {url} after {max_retries} attempts: {str(e)}"
-                    )
-                print(
-                    f"\nRequest failed. Retrying in {retry_delay} seconds...")
+                if attempt == max_retries - 1:
+                    console.print(
+                        f"\nFailed to fetch data after {max_retries} "
+                        "attempts.",
+                        style="bold red")
+                    raise Exception(f"Failed to fetch {url}: {str(e)}")
+
+                console.print(
+                    f"\nRequest failed. Retrying in {retry_delay} seconds...",
+                    style="bold yellow")
                 time.sleep(retry_delay)
 
         raise Exception(f"Failed to fetch {url} after {max_retries} attempts")

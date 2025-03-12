@@ -1,18 +1,19 @@
 import sys
 import logging
 import os
-from datetime import datetime
 
-# Create logs directory if it doesn't exist
-if not os.path.exists('logs'):
-    os.makedirs('logs')
+# Only enable debug logging if DEBUG environment variable is set to true
+DEBUG_MODE = os.environ.get('DEBUG').lower() == 'true'
 
-# Configure logging to write to stdout
+# Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG if DEBUG_MODE else logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout  # This will go to Heroku logs
-)
+    stream=sys.stdout if DEBUG_MODE else open(os.devnull, 'w'))
+
+# Set higher log levels for third-party libraries
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('google').setLevel(logging.WARNING)
 
 # Create logger
 logger = logging.getLogger('crag_leader')

@@ -140,7 +140,8 @@ def scrape_data(headers: dict, crag_url: str, gsc: client):
     # Attempt login
     if not scraper.login(username, password, useralias):
         console.print(
-            "\nFailed to login to 27crags.com. Please check your credentials.\n",
+            "\nFailed to login to 27crags.com. Please check your "
+            "credentials.\n",
             style="bold red")
         return None, None, None
 
