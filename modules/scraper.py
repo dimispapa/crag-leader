@@ -83,7 +83,7 @@ class Scraper:
     def login(self, username: str, password: str):
         """
         Login to 27crags.com using provided credentials.
-
+        
         Args:
             username (str): 27crags.com username/email
             password (str): 27crags.com password
@@ -93,26 +93,70 @@ class Scraper:
         """
         login_url = "https://27crags.com/login"
 
-        # First get the login page to obtain any CSRF tokens
-        self._rate_limit()  # Add rate limiting
-        login_page = self.session.get(login_url, headers=self.headers)
-        soup = BeautifulSoup(login_page.content, 'html5lib')
+        try:
+            # First get the login page to obtain any CSRF tokens
+            self._rate_limit()
+            login_page = self.session.get(login_url, headers=self.headers)
 
-        # Find the CSRF token
-        csrf_token = soup.find('input', {'name': '_csrf'}).get('value')
+            if login_page.status_code != 200:
+                print(
+                    f"Failed to load login page. Status code: {login_page.status_code}"
+                )
+                return False
 
-        # Prepare login data
-        login_data = {
-            '_csrf': csrf_token,
-            'LoginForm[username]': username,
-            'LoginForm[password]': password,
-            'LoginForm[rememberMe]': '1'
-        }
+            soup = BeautifulSoup(login_page.content, 'html5lib')
+            csrf_element = soup.find('input', {'name': '_csrf'})
 
-        # Perform login
-        self._rate_limit()  # Add rate limiting
-        response = self.session.post(login_url,
-                                     data=login_data,
-                                     headers=self.headers)
+            if not csrf_element:
+                print(
+                    "Could not find CSRF token. The website structure might have changed."
+                )
+                # Try to login without CSRF token as fallback
+                login_data = {
+                    'LoginForm[username]': username,
+                    'LoginForm[password]': password,
+                    'LoginForm[rememberMe]': '1'
+                }
+            else:
+                csrf_token = csrf_element.get('value')
+                login_data = {
+                    '_csrf': csrf_token,
+                    'LoginForm[username]': username,
+                    'LoginForm[password]': password,
+                    'LoginForm[rememberMe]': '1'
+                }
 
-        return "dashboard" in response.url
+            # Add more browser-like headers
+            enhanced_headers = {
+                **self.headers, 'Accept':
+                'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Origin': 'https://27crags.com',
+                'Referer': login_url
+            }
+
+            # Perform login
+            self._rate_limit()
+            response = self.session.post(login_url,
+                                         data=login_data,
+                                         headers=enhanced_headers,
+                                         allow_redirects=True)
+
+            # Check if login was successful
+            if "dashboard" in response.url:
+                return True
+
+            # Additional check - look for common login failure indicators
+            if "Invalid username or password" in response.text:
+                print("Login failed: Invalid credentials")
+            elif "Too many login attempts" in response.text:
+                print("Login failed: Too many attempts")
+            else:
+                print("Login failed: Unknown reason")
+
+            return False
+
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            return False
