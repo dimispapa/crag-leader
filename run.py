@@ -53,7 +53,14 @@ def get_user_choice():
 
             # Check if automated update is in progress
             if timestamp:
-                last_update = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+                try:
+                    # First try the new format
+                    last_update = datetime.strptime(timestamp,
+                                                    '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    # If that fails, try the alternative format
+                    last_update = datetime.strptime(timestamp,
+                                                    '%b %d %Y %H:%M:%S')
                 time_since_update = datetime.now() - last_update
 
                 duration_msg = ""
