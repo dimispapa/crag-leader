@@ -72,7 +72,8 @@ class Route:
             list: A list of dictionaries containing climber's name, ascent
             type and date.
         """
-
+        console.print(f'\n\t\tGetting ascent log for {self.name}...',
+                      style="bold yellow")
         # Get the initial page and parse the HTML
         soup = self.scraper.get_html(self.url)
         ascent_log = self.extract_ascent_log(soup)
@@ -123,25 +124,29 @@ class Route:
             for log in log_elements:
                 try:
                     # get the climber's name
-                    climber = log.find(
-                        'a', attrs={'class': 'action'}).text.strip()
+                    climber = log.find('a', attrs={
+                        'class': 'action'
+                    }).text.strip()
                     # get the ascent type and format string to be
                     # all lower no spaces
-                    ascent_type = log.find(
-                        'span',
-                        attrs={'class': 'ascent-type'}
-                    ).text.strip().lower().replace(' ', '')
+                    ascent_type = log.find('span',
+                                           attrs={
+                                               'class': 'ascent-type'
+                                           }).text.strip().lower().replace(
+                                               ' ', '')
                     # get date of ascent and convert to datetime object
-                    date_container = log.find(
-                        'div',
-                        attrs={'class': 'date'}).find_all(recursive=False)[-1]
+                    date_container = log.find('div', attrs={
+                        'class': 'date'
+                    }).find_all(recursive=False)[-1]
                     date_string = date_container.text.strip()
                     date = datetime.strptime(date_string, '%Y-%m-%d').date()
 
                     # form a dictionary and add to ascent_log list
-                    ascent_dict = {'climber_name': climber,
-                                   'ascent_type': ascent_type,
-                                   'ascent_date': date}
+                    ascent_dict = {
+                        'climber_name': climber,
+                        'ascent_type': ascent_type,
+                        'ascent_date': date
+                    }
                     ascent_log.append(ascent_dict)
 
                 # Handle error if the item has no attribute ascent_type
@@ -152,7 +157,7 @@ class Route:
 
         else:
             # console.clear()
-            console.print(
-                f'no logs for route: {self.name}', style="bold yellow")
+            console.print(f'no logs for route: {self.name}',
+                          style="bold yellow")
 
         return ascent_log
