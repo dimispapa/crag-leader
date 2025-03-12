@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import os
-from loggers import logger
+from modules.loggers import logger
 
 
 class Scraper:
