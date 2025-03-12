@@ -72,7 +72,7 @@ class Route:
             list: A list of dictionaries containing climber's name, ascent
             type and date.
         """
-        console.print(f'\n\t\tGetting ascent log for {self.name}...',
+        console.print(f'\tGetting ascent log for {self.name}...',
                       style="bold yellow")
         # Get the initial page and parse the HTML
         soup = self.scraper.get_html(self.url)
