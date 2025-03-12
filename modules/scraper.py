@@ -262,7 +262,8 @@ class Scraper:
 
                 if attempt > 0:
                     console.print(
-                        f"\nRetry attempt {attempt} of {self.max_retries-1}...",
+                        f"\nRetry attempt {attempt} of "
+                        f"{self.max_retries-1}...",
                         style="bold yellow")
 
                 async with session.get(url, headers=self.headers) as response:
@@ -271,7 +272,8 @@ class Scraper:
                             response.headers.get('Retry-After',
                                                  self.retry_delay))
                         console.print(
-                            f"\nRate limit reached. Waiting {wait_time} seconds...",
+                            f"\nRate limit reached. Waiting {wait_time} "
+                            "seconds...",
                             style="bold yellow")
                         await asyncio.sleep(wait_time)
                         continue
@@ -283,12 +285,14 @@ class Scraper:
             except Exception as e:
                 if attempt == self.max_retries - 1:
                     console.print(
-                        f"\nFailed to fetch data after {self.max_retries} attempts.",
+                        f"\nFailed to fetch data after {self.max_retries} "
+                        "attempts.",
                         style="bold red")
                     raise Exception(f"Failed to fetch {url}: {str(e)}")
 
                 console.print(
-                    f"\nRequest failed. Retrying in {self.retry_delay} seconds...",
+                    f"\nRequest failed. Retrying in {self.retry_delay} "
+                    "seconds...",
                     style="bold yellow")
                 await asyncio.sleep(self.retry_delay)
 
