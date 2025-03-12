@@ -91,7 +91,7 @@ class Scraper:
         Returns:
             bool: True if login successful, False otherwise
         """
-        login_url = "https://27crags.com/site/login"
+        login_url = "https://27crags.com/login"
 
         # First get the login page to obtain any CSRF tokens
         self._rate_limit()  # Add rate limiting
