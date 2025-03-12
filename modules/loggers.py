@@ -28,9 +28,9 @@ class ExcludeConsoleFilter(logging.Filter):
 
 # Add filter to console output but allow Heroku to capture it
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.addFilter(ExcludeConsoleFilter())
+# console_handler.addFilter(ExcludeConsoleFilter())
 logger.addHandler(console_handler)
 
 # Prevent the logger from propagating to the root logger
 # This ensures logs don't show up in the console
-logger.propagate = False
+# logger.propagate = False
