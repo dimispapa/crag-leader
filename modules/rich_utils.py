@@ -11,10 +11,10 @@ from rich.table import Table
 from pandas import DataFrame
 from rich.live import Live
 
-# Initialize console with auto-scroll
-console = Console(auto_refresh=True)
+# Initialize the Console
+console = Console()
 
-# Create a more informative progress bar with both elapsed and remaining time
+# Create a more informative progress bar
 progress = Progress(
     SpinnerColumn(),
     TextColumn("[progress.description]{task.description}"),
@@ -22,7 +22,6 @@ progress = Progress(
     TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
     TimeElapsedColumn(),  # Shows time elapsed
     TimeRemainingColumn(),  # Shows estimated time remaining
-    auto_refresh=True,
     expand=True,
     transient=False  # Keep progress output visible
 )
@@ -78,6 +77,10 @@ def show_help():
     console.print(help_text, style="bold cyan")
 
 
-def display_progress_with_output():
-    """Create a live display that keeps progress bar at top"""
-    return Live(progress, refresh_per_second=10, transient=False)
+def create_live_display():
+    """Create a live display with auto-refresh
+    that keeps progress bar at top"""
+    return Live(progress,
+                auto_refresh=True,
+                refresh_per_second=10,
+                transient=False)
