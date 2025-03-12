@@ -40,10 +40,9 @@ class Scraper:
         self.last_request_time = 0
         self.login_url = "https://27crags.com/login"
         # Get environment variables
-        self.min_request_interval = os.getenv(
-            "MIN_REQUEST_INTERVAL")  # seconds
-        self.max_retries = os.getenv("MAX_RETRIES")
-        self.retry_delay = os.getenv("RETRY_DELAY")  # seconds
+        self.min_request_interval = int(os.getenv("MIN_REQUEST_INTERVAL"))
+        self.max_retries = int(os.getenv("MAX_RETRIES"))
+        self.retry_delay = int(os.getenv("RETRY_DELAY"))
 
     def _rate_limit(self):
         """
