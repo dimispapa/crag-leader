@@ -8,11 +8,10 @@ import os
 import json
 import pandas as pd
 from datetime import datetime
-import aiohttp
 from modules.gsheets import GoogleSheetsClient
 from modules.helper import scrape_data
 from modules.rich_utils import console
-from modules.scraper import Scraper
+from playwright.async_api import async_playwright
 
 # Define constants for scraping
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
@@ -107,26 +106,26 @@ def is_recent_update(ago_element, last_scrape_time: str) -> bool:
         return False
 
 
-def process_update_item(item, title_text, ago):
+async def process_update_item(item, title_text, ago_text):
     """
     Process a feed item update and create a detailed update message.
 
     Args:
-        item: BeautifulSoup element containing the feed item
+        item: Playwright element containing the feed item
         title_text: The extracted title text for this update
-        ago: The 'ago' element containing timestamp
+        ago_text: The extracted ago text
 
     Returns:
         str: Formatted update detail string
     """
     # Get the description if available
-    desc_div = item.find('div', class_='description')
-    desc_text = desc_div.get_text(strip=True) if desc_div else ""
+    desc_element = await item.query_selector('div.description')
+    desc_text = (await
+                 desc_element.text_content()).strip() if desc_element else ""
 
     # Get the climber name
-    climber = item.find('a', class_='climber-name')
-    climber_name = climber.get_text(strip=True) if climber else "Unknown"
-    ago_text = ago.get_text(strip=True)
+    climber = await item.query_selector('a.climber-name')
+    climber_name = await climber.text_content() if climber else "Unknown"
 
     # Create and return the detailed update item
     update_detail = f"{climber_name} {title_text} {ago_text} - {desc_text}"
@@ -137,100 +136,67 @@ def process_update_item(item, title_text, ago):
     return update_detail
 
 
-async def check_for_updates(scraper, session, last_scrape):
+async def check_for_updates(last_scrape):
     """Check if there are new routes or ascents on the crag page"""
     console.print("Checking for updates on the crag page...",
                   style="bold blue")
 
-    # html is already a BeautifulSoup object
-    soup = await scraper.get_html_async(CRAG_URL, session)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
 
-    # Debug: Print the first part of the HTML to see what we're getting
-    console.print("\n[bold yellow]DEBUG: First 1000 chars of HTML:[/]")
-    console.print(str(soup)[:1000])
+        try:
+            await page.goto(CRAG_URL)
+            await page.wait_for_selector('ul.feed-items')
 
-    # Debug: Print all ul elements with their classes
-    console.print(
-        "\n[bold yellow]DEBUG: All UL elements and their classes:[/]")
-    for ul in soup.find_all('ul'):
-        console.print(f"UL classes: {ul.get('class', 'No class')}")
+            feed_items = await page.query_selector_all('li.item')
+            console.print(
+                f"\n[bold yellow]DEBUG: Found {len(feed_items)} feed items[/]")
 
-    feed_container = soup.find('ul', class_='feed-items')
-    if not feed_container:
-        console.print(
-            "\n[bold red]DEBUG: Could not find feed-items container[/]")
-        # Debug: Try to find similar class names
-        console.print(
-            "\n[bold yellow]DEBUG: Looking for similar class names containing 'feed' or 'items':[/]"
-        )
-        for element in soup.find_all(
-                class_=lambda x: x and ('feed' in x or 'items' in x)):
-            console.print(f"Found element with class: {element.get('class')}")
-        return False, []
+            has_updates = False
+            update_items = []
 
-    # Find all feed items
-    feed_items = feed_container.find_all('li', class_='item')
+            for item in feed_items:
+                # Check timestamp
+                ago_element = await item.query_selector('a.ago')
+                if not ago_element:
+                    continue
 
-    # Debug: Print number of items found
-    console.print(
-        f"\n[bold yellow]DEBUG: Found {len(feed_items)} feed items[/]")
+                ago_text = await ago_element.text_content()
+                if not is_recent_update(ago_text, last_scrape):
+                    continue
 
-    # Keywords that indicate new route or ascent
-    update_keywords = ["new route", "tick list"]
-    has_updates = False
-    update_items = []
+                # Find the title div
+                title_div = await item.query_selector('div.title')
+                if not title_div:
+                    continue
 
-    for item in feed_items:
-        # Check if items was updated after the last scrape
-        ago = item.find('a', class_='ago')
-        if not is_recent_update(ago, last_scrape):
-            continue
+                title_text = await title_div.text_content()
+                # Debug output to see exact content
+                console.print(f"\n[bold yellow]DEBUG: Title text content: "
+                              f"'{title_text}'[/]")
 
-        # Find the title div within item-details
-        title_div = item.find('div', class_='title')
-        if not title_div:
-            continue
+                # Check for updates
+                tick_list = 'tick list' in title_text.lower()
+                new_route = 'new route' in title_text.lower()
+                if tick_list or new_route:
+                    update_detail = await process_update_item(
+                        item, title_text, ago_text)
+                    has_updates = True
+                    update_items.append(update_detail)
 
-        # Check for tick list updates (in anchor text)
-        tick_list_link = title_div.find('a')
-        if tick_list_link and 'tick list' in tick_list_link.get_text(
-                strip=True).lower():
-            title_text = title_div.get_text(strip=True)  # Get full context
-            console.print(f"\n[bold yellow]DEBUG: "
-                          f"Found tick list update: {title_text}[/]")
+            if has_updates:
+                console.print(f"Found updates: {', '.join(update_items[:3])}",
+                              style="bold green")
+                updates_df = pd.DataFrame(update_items,
+                                          columns=['Update Items'])
+                return True, updates_df
+            else:
+                console.print("No new updates found", style="yellow")
+                return False, []
 
-            update_detail = process_update_item(item, title_text, ago)
-            has_updates = True
-            update_items.append(update_detail)
-            # Continue as already found one of the keywords
-            continue
-
-        # Check for new route updates (in span)
-        new_route_span = title_div.find('span')
-        if new_route_span and 'new route' in new_route_span.get_text(
-                strip=True).lower():
-            title_text = new_route_span.get_text(strip=True)
-            console.print(f"\n[bold yellow]DEBUG: "
-                          f"Found new route update: {title_text}[/]")
-
-            update_detail = process_update_item(item, title_text, ago)
-            has_updates = True
-            update_items.append(update_detail)
-            # Continue as already found one of the keywords
-            continue
-
-    # If updates were found, return them and true to signal for scraping
-    if has_updates:
-        console.print(f"Found updates: {', '.join(update_items[:3])}",
-                      style="bold green")
-        # Parse the update items into a dataframe
-        updates_df = pd.DataFrame(update_items, columns=['Update Items'])
-        return True, updates_df
-    else:
-        console.print(f"\n[bold yellow]DEBUG: "
-                      f"No matches found for keywords: {update_keywords}[/]")
-        console.print("No new updates found", style="yellow")
-        return False, []
+        finally:
+            await browser.close()
 
 
 async def worker_processor():
@@ -242,69 +208,61 @@ async def worker_processor():
     # Create Google Sheets client
     gsc = GoogleSheetsClient(CREDS_JSON, SCOPE)
 
-    # Create scraper instance
-    scraper = Scraper(HEADERS)
-
     try:
-        # Create a new client session
-        async with aiohttp.ClientSession() as session:
+        # Get last scrape time from config
+        last_scrape, duration = gsc.get_timestamp_and_duration('data')
+        console.print(
+            f"Last scrape was on: {last_scrape}"
+            f" and took ~{duration} minutes",
+            style="bold blue")
 
-            # Get last scrape time from config
-            last_scrape, duration = gsc.get_timestamp_and_duration('data')
-            console.print(
-                f"Last scrape was on: {last_scrape}"
-                f" and took ~{duration} minutes",
-                style="bold blue")
+        # Check for updates
+        updates_found, updates_df = await check_for_updates(last_scrape)
 
-            # Check for updates
-            updates_found, updates_df = await check_for_updates(
-                scraper, session, last_scrape)
+        # If updates were found or it's been too long since last scrape
+        if updates_found:
+            # Write the update items to the sheet
+            gsc.write_data_to_sheet(
+                'data', f'updates_{datetime.now().strftime("%Y-%m-%d")}',
+                updates_df)
 
-            # If updates were found or it's been too long since last scrape
-            if updates_found:
-                # Write the update items to the sheet
-                gsc.write_data_to_sheet(
-                    'data', f'updates_{datetime.now().strftime("%Y-%m-%d")}',
-                    updates_df)
+            # Start time tracking
+            start_time = time.time()
 
-                # Start time tracking
-                start_time = time.time()
+            # Store the update reason
+            gsc.update_scrape_reason('data', "New routes or ascents detected")
 
-                # Store the update reason
-                gsc.update_scrape_reason('data',
-                                         "New routes or ascents detected")
+            # Run the scraping process
+            console.print("Starting scrape due to detected updates...",
+                          style="bold green")
+            boulder_data, route_data, ascent_data = await scrape_data(
+                HEADERS, CRAG_URL, gsc)
 
-                # Run the scraping process
-                console.print("Starting scrape due to detected updates...",
-                              style="bold green")
-                boulder_data, route_data, ascent_data = await scrape_data(
-                    HEADERS, CRAG_URL, gsc, session)
+            # Calculate duration
+            duration_secs = time.time() - start_time
 
-                # Calculate duration
-                duration_secs = time.time() - start_time
+            # Update timestamp with duration
+            gsc.update_timestamp('data', duration_secs)
 
-                # Update timestamp with duration
-                gsc.update_timestamp('data', duration_secs)
+            # Also update the last scrape time in new format
+            gsc.update_last_scrape_time(
+                'data',
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-                # Also update the last scrape time in new format
-                gsc.update_last_scrape_time(
-                    'data',
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-                # Log completion
-                if boulder_data:
-                    console.print(
-                        f"\nScraping completed in {duration_secs/60:.2f} "
-                        f"minutes.\n"
-                        f"Data retrieved: \n- {len(boulder_data)} Boulders"
-                        f"\n- {len(route_data)} Routes"
-                        f"\n- {len(ascent_data)} Ascents\n",
-                        style="bold green")
-                else:
-                    console.print("Scraping failed or no data retrieved.",
-                                  style="bold red")
+            # Log completion
+            if boulder_data:
+                console.print(
+                    f"\nScraping completed in {duration_secs/60:.2f} "
+                    f"minutes.\n"
+                    f"Data retrieved: \n- {len(boulder_data)} Boulders"
+                    f"\n- {len(route_data)} Routes"
+                    f"\n- {len(ascent_data)} Ascents\n",
+                    style="bold green")
             else:
-                console.print("No update needed at this time.", style="yellow")
+                console.print("Scraping failed or no data retrieved.",
+                              style="bold red")
+        else:
+            console.print("No update needed at this time.", style="yellow")
 
     except Exception as e:
         console.print(f"Error in worker process: {str(e)}", style="bold red")
