@@ -6,6 +6,7 @@ Imports the necessary classes/functions from the following modules:
 - scraper.py
 """
 from time import sleep
+import os
 import pandas as pd
 from rich.prompt import Prompt
 from gspread import exceptions
@@ -15,7 +16,7 @@ from modules.score import ScoreCalculator
 from modules.helper import (scrape_data, retrieve_data, clear, welcome_msg,
                             rank_leaderboard)
 from datetime import datetime, timedelta
-
+import json
 # GLOBAL CONSTANTS
 # Define constants for scraping
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
@@ -32,10 +33,20 @@ SCOPE = [
     "https://www.googleapis.com/auth/drive.file",
     "https://www.googleapis.com/auth/drive"
 ]
-CREDS_FILE = "creds.json"
+
+# Get credentials from environment variable
+CREDS_ENV = os.environ.get('CREDS_FILE')
+
+if CREDS_ENV:
+    # Parse the JSON string into a dictionary
+    CREDS_JSON = json.loads(CREDS_ENV)
+
+else:
+    # Fallback to file-based credentials for local development
+    CREDS_JSON = "creds.json"
 
 # Create an instance of GoogleSheetsClient
-GSC = GoogleSheetsClient(CREDS_FILE, SCOPE)
+GSC = GoogleSheetsClient(CREDS_JSON, SCOPE)
 
 
 def get_user_choice():
@@ -50,6 +61,13 @@ def get_user_choice():
         try:
             # get the latest timestamp + duration from google sheet file
             timestamp, duration = GSC.get_timestamp_and_duration('data')
+
+            # Try to get scrape reason if available
+            scrape_reason = "Manual scrape"
+            try:
+                scrape_reason = GSC.get_scrape_reason('data')
+            except Exception:
+                pass
 
             # Check if automated update is in progress
             if timestamp:
@@ -68,6 +86,10 @@ def get_user_choice():
                     duration_msg = "\nLast scrape took approximately " \
                                    f"{duration} minutes."
 
+                reason_msg = ""
+                if scrape_reason:
+                    reason_msg = f"\nReason: {scrape_reason}"
+
                 update_msg = ""
                 if time_since_update < timedelta(minutes=30):
                     update_msg = "\n[bold yellow]Note: An automated update " \
@@ -76,7 +98,7 @@ def get_user_choice():
                 # Modified prompt to reflect automated updates
                 choice = Prompt.ask(
                     "[bold cyan]Crag data has been last updated on: "
-                    f"{timestamp}{duration_msg}{update_msg}\n"
+                    f"{timestamp}{duration_msg}{reason_msg}{update_msg}\n"
                     "Options:\n"
                     "1: Force new data collection (takes ~30 minutes)\n"
                     "2: Use existing data").strip().lower()

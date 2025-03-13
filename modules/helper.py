@@ -13,6 +13,7 @@ import asyncio
 import aiohttp
 import logging
 from modules.rich_utils import live
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -125,8 +126,24 @@ def compile_data(crag: Crag):
     return boulder_data, route_data, ascent_data
 
 
-async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
-    """Async version of scrape_data"""
+async def async_scrape_data(headers: dict,
+                            crag_url: str,
+                            gsc: client,
+                            session=None):
+    """
+    Async version of scrape_data - supports worker dyno
+    by accepting an optional session.
+
+    Args:
+        headers (dict): HTTP headers to use for requests
+        crag_url (str): URL of the crag to scrape
+        gsc (client): Google Sheets client
+        session (aiohttp.ClientSession, optional): Existing client session
+        to use
+
+    Returns:
+        tuple: (boulder_data, route_data, ascent_data) DataFrames
+    """
     clear()
     scraper = Scraper(headers)
 
@@ -155,33 +172,54 @@ async def async_scrape_data(headers: dict, crag_url: str, gsc: client):
     # Start the live display
     live.start()
 
-    async with aiohttp.ClientSession() as session:
+    # Track if we created our own session
+    own_session = session is None
+
+    # Create session if none was provided
+    if own_session:
+        session = aiohttp.ClientSession()
+
+    start_time = time.time()
+
+    try:
+        # Create crag instance
+        crag = Crag(crag_url, scraper)
+
+        # Get boulders asynchronously
+        await crag.get_boulders_async(session)
+
+        # Compile data
+        boulder_data, route_data, ascent_data = compile_data(crag)
+
+        # Write to sheets
+        clear()
+        console.print("\nWriting data to google sheets ...\n",
+                      style="bold yellow")
+        gsc.write_data_to_sheet('data', 'boulders', boulder_data)
+        gsc.write_data_to_sheet('data', 'routes', route_data)
+        gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+        gsc.update_timestamp('data', time.time() - start_time)
+
+        # Update the scrape reason
         try:
-            # Create crag instance
-            crag = Crag(crag_url, scraper)
-
-            # Get boulders asynchronously
-            await crag.get_boulders_async(session)
-
-            # Compile data
-            boulder_data, route_data, ascent_data = compile_data(crag)
-
-            # Write to sheets
-            clear()
-            console.print("\nWriting data to google sheets ...\n",
-                          style="bold yellow")
-            gsc.write_data_to_sheet('data', 'boulders', boulder_data)
-            gsc.write_data_to_sheet('data', 'routes', route_data)
-            gsc.write_data_to_sheet('data', 'ascents', ascent_data)
-            gsc.update_timestamp('data')
-
-            return boulder_data, route_data, ascent_data
+            gsc.update_scrape_reason('data',
+                                     "Manual scrape from web interface")
         except Exception as e:
-            logger.error(f"Error during scraping: {str(e)}")
-            return None, None, None
-        finally:
-            # Stop the live display
-            live.stop()
+            logger.debug(f"Could not update scrape reason: {e}")
+
+        return boulder_data, route_data, ascent_data
+
+    except Exception as e:
+        logger.error(f"Error during scraping: {str(e)}")
+        console.print(f"\nError during scraping: {str(e)}", style="bold red")
+        return None, None, None
+    finally:
+        # Stop the live display
+        live.stop()
+
+        # Only close the session if we created it
+        if own_session and session:
+            await session.close()
 
 
 def scrape_data(headers: dict, crag_url: str, gsc: client):

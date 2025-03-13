@@ -130,3 +130,62 @@ class GoogleSheetsClient:
 
         except Exception as e:
             raise ValueError(f"Error retrieving timestamp: {e}")
+
+    def update_scrape_reason(self, spreadsheet_name: str, reason: str):
+        """
+        Update the reason why a scrape was performed.
+
+        Args:
+            spreadsheet_name (str): The name of the spreadsheet.
+            reason (str): The reason for the scrape.
+        """
+        try:
+            # Try to access last_updated worksheet first
+            try:
+                worksheet = self.client.open(spreadsheet_name).worksheet(
+                    'last_updated')
+
+                # Check if A3 cell exists or needs to be added
+                try:
+                    worksheet.acell('A3')  # Check if cell exists
+                    worksheet.update('A3', reason)
+                except Exception:
+                    # Add a header in row 3 if needed
+                    worksheet.update('A3:B3', [['Reason', reason]])
+
+            except gspread.WorksheetNotFound:
+                # Create the worksheet if it doesn't exist
+                gsheet = self.client.open(spreadsheet_name)
+                worksheet = gsheet.add_worksheet(title='last_updated',
+                                                 rows=5,
+                                                 cols=2)
+                worksheet.update('A1:B3', [[
+                    'Last Update',
+                    datetime.now().strftime("%b %d %Y %H:%M:%S")
+                ], ['Duration (mins)', ''], ['Reason', reason]])
+
+        except Exception as e:
+            print(f"Error updating scrape reason: {e}")
+
+    def get_scrape_reason(self, spreadsheet_name: str):
+        """
+        Get the reason for the last scrape.
+
+        Args:
+            spreadsheet_name (str): The name of the spreadsheet.
+
+        Returns:
+            str: The reason for the last scrape or a default message.
+        """
+        try:
+            worksheet = self.client.open(spreadsheet_name).worksheet(
+                'last_updated')
+            reason = worksheet.acell('A3').value
+
+            # If cell exists but is empty or doesn't exist
+            if not reason:
+                return "No scrape reason recorded"
+            else:
+                return reason
+        except Exception:
+            return "Error retrieving scrape reason"
