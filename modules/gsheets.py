@@ -113,8 +113,8 @@ class GoogleSheetsClient:
             worksheet = self.client.open(spreadsheet_name).worksheet(
                 'last_updated')
 
-            # Update timestamp in A2
-            worksheet.update('A2', timestamp)
+            # Update timestamp in B1
+            worksheet.update('B1', timestamp)
 
             # Update duration in B2 if provided
             if duration_seconds is not None:
@@ -130,7 +130,7 @@ class GoogleSheetsClient:
         try:
             worksheet = self.client.open(spreadsheet_name).worksheet(
                 'last_updated')
-            timestamp = worksheet.acell('A2').value
+            timestamp = worksheet.acell('B1').value
             duration = worksheet.acell('B2').value
 
             return timestamp, duration
