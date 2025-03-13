@@ -13,6 +13,8 @@ from modules.helper import scrape_data
 from modules.rich_utils import console
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -119,11 +121,11 @@ def create_driver():
 
     if 'DYNO' in os.environ:  # If running on Heroku
         chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-        driver = webdriver.Chrome(
-            executable_path=os.environ.get("CHROMEDRIVER_PATH"),
-            options=chrome_options)
+        service = Service(os.environ.get("CHROMEDRIVER_PATH"))
+        driver = webdriver.Chrome(service=service, options=chrome_options)
     else:  # Local development
-        driver = webdriver.Chrome(options=chrome_options)
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
 
     return driver
 
@@ -233,9 +235,11 @@ async def worker_processor():
         if updates_found:
             # Write the update items to the sheet
             gsc.write_data_to_sheet(
-                'data', f'updates_{datetime.now().strftime("%Y-%m-%d")}',
-                updates_df, rows=round(len(updates_df) / 10)*10,
-                cols=round(len(updates_df.columns) / 10)*10)
+                'data',
+                f'updates_{datetime.now().strftime("%Y-%m-%d")}',
+                updates_df,
+                rows=round(len(updates_df) / 10) * 10,
+                cols=round(len(updates_df.columns) / 10) * 10)
 
             # Start time tracking
             start_time = time.time()
