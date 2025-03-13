@@ -99,14 +99,14 @@ def get_user_choice():
                 choice = Prompt.ask(
                     "[bold cyan]Crag data has been last updated on: "
                     f"{timestamp}{duration_msg}{reason_msg}{update_msg}\n"
-                    "Options:\n"
+                    "Options (Please enter 1 or 2):\n"
                     "1: Force new data collection (takes ~30 minutes)\n"
                     "2: Use existing data").strip().lower()
             else:
                 # prompt user choice.
                 # Case-insesitive and remove leading/trailing spaces
                 choice = Prompt.ask("[bold cyan]No existing data found.\n"
-                                    "Options:\n"
+                                    "Options (Please enter 1 or 2):\n"
                                     "1: Start data collection\n"
                                     "2: Exit").strip().lower()
 
@@ -137,7 +137,7 @@ def get_user_choice():
                 style="bold red")
 
             # Prompt user choice instead of defaulting to scrape
-            choice = Prompt.ask("[bold cyan]Options:\n"
+            choice = Prompt.ask("[bold cyan]Options (Please enter 1 or 2):\n"
                                 "1: Start data collection\n"
                                 "2: Exit").strip().lower()
 

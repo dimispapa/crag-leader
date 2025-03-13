@@ -187,7 +187,7 @@ class GoogleSheetsClient:
         try:
             worksheet = self.client.open(spreadsheet_name).worksheet(
                 'last_updated')
-            reason = worksheet.acell('A3').value
+            reason = worksheet.acell('B3').value
 
             # If cell exists but is empty or doesn't exist
             if not reason:
