@@ -39,11 +39,18 @@ class GoogleSheetsClient:
     def _authorize_client(self):
         """
         Authorize the gspread client using the provided credentials and scope.
-
+        Handles both file-based credentials and dict/JSON credentials.
+        
         Returns:
             gspread.Client: Authorized gspread client.
         """
-        creds = Credentials.from_service_account_file(self.creds_file)
+        # Check if creds_file is a dictionary (from environment variable)
+        if isinstance(self.creds_file, dict):
+            creds = Credentials.from_service_account_info(self.creds_file)
+        # If it's a string, assume it's a file path
+        else:
+            creds = Credentials.from_service_account_file(self.creds_file)
+        
         scoped_creds = creds.with_scopes(self.scope)
         return gspread.authorize(scoped_creds)
 

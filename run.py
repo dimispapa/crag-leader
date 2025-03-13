@@ -35,7 +35,7 @@ SCOPE = [
 ]
 
 # Get credentials from environment variable
-CREDS_ENV = os.environ.get('CREDS_FILE')
+CREDS_ENV = os.environ.get('CREDS')
 
 if CREDS_ENV:
     # Parse the JSON string into a dictionary
