@@ -145,11 +145,27 @@ async def check_for_updates(scraper, session, last_scrape):
     # html is already a BeautifulSoup object
     soup = await scraper.get_html_async(CRAG_URL, session)
 
-    # Debug: Verify we can find the feed-items ul container
+    # Debug: Print the first part of the HTML to see what we're getting
+    console.print("\n[bold yellow]DEBUG: First 1000 chars of HTML:[/]")
+    console.print(str(soup)[:1000])
+
+    # Debug: Print all ul elements with their classes
+    console.print(
+        "\n[bold yellow]DEBUG: All UL elements and their classes:[/]")
+    for ul in soup.find_all('ul'):
+        console.print(f"UL classes: {ul.get('class', 'No class')}")
+
     feed_container = soup.find('ul', class_='feed-items')
     if not feed_container:
         console.print(
             "\n[bold red]DEBUG: Could not find feed-items container[/]")
+        # Debug: Try to find similar class names
+        console.print(
+            "\n[bold yellow]DEBUG: Looking for similar class names containing 'feed' or 'items':[/]"
+        )
+        for element in soup.find_all(
+                class_=lambda x: x and ('feed' in x or 'items' in x)):
+            console.print(f"Found element with class: {element.get('class')}")
         return False, []
 
     # Find all feed items
