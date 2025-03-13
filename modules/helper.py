@@ -195,9 +195,21 @@ async def async_scrape_data(headers: dict,
         clear()
         console.print("\nWriting data to google sheets ...\n",
                       style="bold yellow")
-        gsc.write_data_to_sheet('data', 'boulders', boulder_data)
-        gsc.write_data_to_sheet('data', 'routes', route_data)
-        gsc.write_data_to_sheet('data', 'ascents', ascent_data)
+        gsc.write_data_to_sheet('data', 'boulders', boulder_data,
+                                # Save space by setting rows and cols to
+                                # the nearest multiple of 10
+                                rows=round(len(boulder_data) / 10)*10,
+                                cols=round(len(boulder_data.columns) / 10)*10)
+        gsc.write_data_to_sheet('data', 'routes', route_data,
+                                # Save space by setting rows and cols to
+                                # the nearest multiple of 10
+                                rows=round(len(route_data) / 10)*10,
+                                cols=round(len(route_data.columns) / 10)*10)
+        gsc.write_data_to_sheet('data', 'ascents', ascent_data,
+                                # Save space by setting rows and cols to
+                                # the nearest multiple of 10
+                                rows=round(len(ascent_data) / 10)*10,
+                                cols=round(len(ascent_data.columns) / 10)*10)
         gsc.update_timestamp('data', time.time() - start_time)
 
         # Update the scrape reason

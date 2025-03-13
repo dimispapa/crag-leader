@@ -72,7 +72,8 @@ class GoogleSheetsClient:
         return worksheet.get_all_records()
 
     def write_data_to_sheet(self, gsheet_name: str, worksheet_name: str,
-                            dataframe: DataFrame):
+                            dataframe: DataFrame, rows: int = 1000,
+                            cols: int = 10):
         """
         Writes data to worksheet in Google Sheet.
 
@@ -90,8 +91,8 @@ class GoogleSheetsClient:
 
         except gspread.WorksheetNotFound:
             worksheet = gsheet.add_worksheet(title=worksheet_name,
-                                             rows=1000,
-                                             cols=10)
+                                             rows=rows,
+                                             cols=cols)
 
         # clear the worksheet
         worksheet.clear()
