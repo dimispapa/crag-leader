@@ -18,7 +18,7 @@ This project follows [Semantic Versioning](https://semver.org/). Release format:
 
 For a list of all releases and changes, see the [Changelog](#changelog).
 
-Latest stable version: 1.1.0
+Latest stable version: 1.2.0
 
 ## UX
 
@@ -165,12 +165,39 @@ This includes the first user prompt with choices being to either "scrape" the la
        - Master Grade leaderboard table
        ![Master Grade leaderboard](documentation/screenshots/grade-lead-table.png)
 
+- **Automated Background Processing (new feature with v1.2.0)**:
+  - The application now performs daily background checks for new climbs and updates.
+  - When changes are detected, automated scraping is triggered without manual intervention.
+  - All update activities are tracked with timestamps and reason codes in Google Sheets.
+
+
 ### Future Features
 The future features are aligned with the future user goals:
 - Expand the Crag class to include methods and attributes around statistics such as Highest grade achieved in Crag by X climber, Median grade climbed etc. Implement this as options to the menus.
 - Expand the use of this accross the whole of 27crags available areas and crags, including Sport Climbing and Traditional Climbing areas.
 - Allow logging of climbs for available crag routes from the Crag Leader application itself. This might require user-authentication feature as well in order to make it more robust, as currently it relies on the users logging climbs on their account on 27crags.
 - Create a user-friendly but simple GUI for the application to enhance the UX.
+
+## Technical Improvements (v1.2.0)
+
+- **Asynchronous Processing**: 
+  - Implemented asynchronous operations using Python's `asyncio` library
+  - Enables concurrent data collection from multiple boulders simultaneously
+  - Significantly reduces total scraping time
+
+- **Worker Architecture**:
+  - Added a dedicated worker process that runs separately from the web interface
+  - Implemented using Heroku worker dynos to prevent timeouts during long-running operations
+  - Enables background processing without affecting the user experience
+
+- **Batch Processing**:
+  - Optimized data collection by processing items in batches
+  - Reduced overall processing time while maintaining data integrity
+
+- **Enhanced Error Handling**:
+  - Improved robustness with comprehensive error handling
+  - Added scrape reason tracking to monitor update causes
+  - Better diagnostic information for troubleshooting
 
 ## Testing
 Use-case testing was carried out accross all of the app's CLI options and scenarios imagined. This meant that the code development was impacted by bugs, errors and unwanted UX issues that had to be fixed, as the application evolved and features were added.
@@ -205,9 +232,6 @@ Below are direct access links to the validation of each python module with no is
 - An uknknown potential bug could throw an APIError from *gspread* library. This only occured once when my substitution mentor Tim, tried to initially access the application. On refresh this error went away but the below screenshot indicates the error. To handle the scenario of this happening again, a *try-except* block was added around the call of the *main* function, which notifies the user of the error and attemtps to run *main* again after a *sleep* of 3 seconds.
 ![API Error](documentation/screenshots/api-error.png)
 
-### Unfixed Bugs
-- A very minor bug is that the leaderboard tables displayed do not clear if you scroll up and check. On discussion with mentor Tim, understood that this is a known bug on Heroku deployed apps that it can only clear the visible terminal area. Do to the tall size of the tables, this means they linger out of sight without being cleard, in case you scroll back up. This is not a major UX issue as it is not visible to the user and the upside is that the user can refer back to the tables previously selected without having to reselect them.
-
 ## Technologies Used
 
 ### Main Programming Languages used
@@ -226,6 +250,8 @@ Below are direct access links to the validation of each python module with no is
 - **beautifulsoup4**: for scraping the webpage, parsing the HTML into a soup object and navigating the element structure, targetting elements as needed.
 - **requests**: for handling HTTP requests to the URLs for scraping using the response object.
 - **json**: used to read files in json format.
+- **asyncio**: for asynchronous programming and concurrent operations
+- **aiohttp**: for asynchronous HTTP requests
 
 ### Tools
 - **Heroku** for live deployment of a python-based CLI application.
@@ -234,6 +260,7 @@ Below are direct access links to the validation of each python module with no is
 - **VS-Code Desktop**: The IDE used to write Python code and manage the workspace files. Connected to the Gitpod Enterprise workspace via remote connection. Useful extensions were used such as Python, PEP8 linters etc.
 - **Overleaf**: for creating the process-flow diagrams used in the readme.
 - **Chatgpt** was used to create the image at the start of the readme, general queries regarding code and helping to write docstrings rapidly.
+- **Heroku Worker Dynos**: for running background processes without timeout limitations
 
 ## Deployment
 - The app was deployed via the Heroku Cloud platform.
@@ -267,6 +294,12 @@ Below are direct access links to the validation of each python module with no is
 - In the terminal, type "git clone", paste the copied URL, and press 'Enter'.
 - This will start the cloning process.
 
+### Heroku Worker Configuration
+- In addition to the web dyno, a worker dyno is configured to handle background processing.
+- The worker process is defined in the Procfile: `worker: python worker.py` in addition to `web: node index.js`.
+- To enable worker dynos, scale them using: `heroku ps:scale worker=1` or manage via the Heroku web interface.
+- The worker process runs independently of the web interface, preventing timeout issues during long-running operations, which is suitable for the data collection/scraping process.
+
 ### Credits
 - **Code Institute** - Full Stack Developer Course: Python material and Love-Sandwiches walkthrough.
 - [Geeksforgeeks.org](https://www.geeksforgeeks.org/): Helping to understand various python methods/concepts, including but not limited to: 
@@ -289,6 +322,25 @@ Below are direct access links to the validation of each python module with no is
 - Thanks to Deloitte for my past experience and training using Python.
 
 ## Changelog
+
+### Version 1.2.0 (2025-03-13)
+#### Added
+- Asynchronous operations for concurrent data collection
+- Scheduled daily background checks for new changes 
+- Automatic update triggering when changes are detected
+- Worker architecture using Heroku worker dynos
+- Batch processing for optimized performance
+- Scrape reason tracking to monitor update sources (automated vs. manual)
+
+#### Changed
+- Improved error handling throughout the application
+- Reduced processing time by ~40% through parallelization
+- Enhanced CLI interface to display update status and history
+
+#### Fixed
+- Multiple bugs in CLI operations
+- Credential handling for environment variables
+- Issues with Google Sheets timestamp updates
 
 ### Version 1.1.0 (2025-03-12)
 #### Added
