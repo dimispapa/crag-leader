@@ -11,7 +11,11 @@ from datetime import datetime
 from modules.gsheets import GoogleSheetsClient
 from modules.helper import scrape_data
 from modules.rich_utils import console
-from playwright.async_api import async_playwright
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Define constants for scraping
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
@@ -106,99 +110,103 @@ def is_recent_update(ago_element, last_scrape_time: str) -> bool:
         return False
 
 
-async def process_update_item(item, title_text, ago_text):
-    """
-    Process a feed item update and create a detailed update message.
+def create_driver():
+    """Create and configure Chrome WebDriver"""
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--no-sandbox")
 
-    Args:
-        item: Playwright element containing the feed item
-        title_text: The extracted title text for this update
-        ago_text: The extracted ago text
+    if 'DYNO' in os.environ:  # If running on Heroku
+        chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
+        driver = webdriver.Chrome(
+            executable_path=os.environ.get("CHROMEDRIVER_PATH"),
+            options=chrome_options)
+    else:  # Local development
+        driver = webdriver.Chrome(options=chrome_options)
 
-    Returns:
-        str: Formatted update detail string
-    """
-    # Get the description if available
-    desc_element = await item.query_selector('div.description')
-    desc_text = (await
-                 desc_element.text_content()).strip() if desc_element else ""
-
-    # Get the climber name
-    climber = await item.query_selector('a.climber-name')
-    climber_name = await climber.text_content() if climber else "Unknown"
-
-    # Create and return the detailed update item
-    update_detail = f"{climber_name} {title_text} {ago_text} - {desc_text}"
-
-    # Debug: Print when a match is found
-    console.print(f"\n[bold green]DEBUG: Found update: {update_detail}[/]")
-
-    return update_detail
+    return driver
 
 
-async def check_for_updates(last_scrape):
+def check_for_updates(last_scrape):
     """Check if there are new routes or ascents on the crag page"""
     console.print("Checking for updates on the crag page...",
                   style="bold blue")
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(
-            chromium_sandbox=False,  # Required for Heroku as per docs
-        )
-        page = await browser.new_page()
+    driver = create_driver()
 
-        try:
-            await page.goto(CRAG_URL)
-            await page.wait_for_selector('ul.feed-items')
+    try:
+        driver.get(CRAG_URL)
+        # Wait for feed-items to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "ul.feed-items")))
+        # Get all feed items
+        feed_items = driver.find_elements(By.CSS_SELECTOR, "li.item")
+        console.print(
+            f"\n[bold yellow]DEBUG: Found {len(feed_items)} feed items[/]")
 
-            feed_items = await page.query_selector_all('li.item')
+        has_updates = False
+        update_items = []
+        # Iterate through each feed item
+        for item in feed_items:
+            # Check timestamp
+            ago_element = item.find_element(By.CSS_SELECTOR, "a.ago")
+            ago_text = ago_element.text
+
+            # If the item is not recent (after last scrape), skip it
+            if not is_recent_update(ago_element, last_scrape):
+                continue
+
+            # Find the title div
+            title_div = item.find_element(By.CSS_SELECTOR, "div.title")
+            title_text = title_div.text
+
+            # Debug output
             console.print(
-                f"\n[bold yellow]DEBUG: Found {len(feed_items)} feed items[/]")
+                f"\n[bold yellow]DEBUG: Title text content: '{title_text}'[/]")
 
-            has_updates = False
-            update_items = []
+            # Check for new routes or ascents
+            tick_list = 'tick list' in title_text.lower()
+            new_route = 'new route' in title_text.lower()
+            if tick_list or new_route:
+                # Fetch the update details
+                update_detail = fetch_update_details(item, title_text,
+                                                     ago_text)
+                has_updates = True
+                # Add the update to the list
+                update_items.append(update_detail)
 
-            for item in feed_items:
-                # Check timestamp
-                ago_element = await item.query_selector('a.ago')
-                if not ago_element:
-                    continue
+        # If there are updates, print them and return as dataframe
+        if has_updates:
+            console.print(f"Found updates: {', '.join(update_items[:3])}",
+                          style="bold green")
+            updates_df = pd.DataFrame(update_items, columns=['Update Items'])
+            return True, updates_df
 
-                ago_text = await ago_element.text_content()
-                if not is_recent_update(ago_text, last_scrape):
-                    continue
+        # If no updates, print message and return empty dataframe
+        else:
+            console.print("No new updates found", style="yellow")
+            return False, None
 
-                # Find the title div
-                title_div = await item.query_selector('div.title')
-                if not title_div:
-                    continue
+    finally:
+        driver.quit()
 
-                title_text = await title_div.text_content()
-                # Debug output to see exact content
-                console.print(f"\n[bold yellow]DEBUG: Title text content: "
-                              f"'{title_text}'[/]")
 
-                # Check for updates
-                tick_list = 'tick list' in title_text.lower()
-                new_route = 'new route' in title_text.lower()
-                if tick_list or new_route:
-                    update_detail = await process_update_item(
-                        item, title_text, ago_text)
-                    has_updates = True
-                    update_items.append(update_detail)
+def fetch_update_details(item, title_text, ago_text):
+    """Process a single update item"""
+    try:
+        user_element = item.find_element(By.CSS_SELECTOR, "a.user")
+        user_name = user_element.text
 
-            if has_updates:
-                console.print(f"Found updates: {', '.join(update_items[:3])}",
-                              style="bold green")
-                updates_df = pd.DataFrame(update_items,
-                                          columns=['Update Items'])
-                return True, updates_df
-            else:
-                console.print("No new updates found", style="yellow")
-                return False, []
+        route_element = item.find_element(By.CSS_SELECTOR, "a.route")
+        route_name = route_element.text
 
-        finally:
-            await browser.close()
+        update_text = f"{user_name} - {route_name} ({ago_text})"
+        console.print(f"Found update: {update_text}", style="green")
+        return update_text
+    except Exception as e:
+        console.print(f"Error processing update item: {e}", style="red")
+        return f"Error processing update: {title_text}"
 
 
 async def worker_processor():
@@ -226,7 +234,8 @@ async def worker_processor():
             # Write the update items to the sheet
             gsc.write_data_to_sheet(
                 'data', f'updates_{datetime.now().strftime("%Y-%m-%d")}',
-                updates_df)
+                updates_df, rows=round(len(updates_df) / 10)*10,
+                cols=round(len(updates_df.columns) / 10)*10)
 
             # Start time tracking
             start_time = time.time()
