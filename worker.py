@@ -97,7 +97,7 @@ async def worker_process():
                 scraper, session)
 
             # Get last scrape time from config
-            last_scrape, duration = gsc.get_timestamp_duration('data')
+            last_scrape, duration = gsc.get_timestamp_and_duration('data')
             console.print(
                 f"Last scrape was on: {last_scrape}"
                 f" and took ~{duration} minutes",
