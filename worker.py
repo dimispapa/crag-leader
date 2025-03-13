@@ -97,9 +97,11 @@ async def worker_process():
                 scraper, session)
 
             # Get last scrape time from config
-            last_scrape = gsc.get_last_scrape_time('data')
-            console.print(f"Last scrape was on: {last_scrape}",
-                          style="bold blue")
+            last_scrape, duration = gsc.get_timestamp_duration('data')
+            console.print(
+                f"Last scrape was on: {last_scrape}"
+                f" and took ~{duration} minutes",
+                style="bold blue")
 
             # If updates were found or it's been too long since last scrape
             if updates_found:

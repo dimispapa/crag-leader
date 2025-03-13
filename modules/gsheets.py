@@ -50,7 +50,7 @@ class GoogleSheetsClient:
         # If it's a string, assume it's a file path
         else:
             creds = Credentials.from_service_account_file(self.creds_file)
-        
+
         scoped_creds = creds.with_scopes(self.scope)
         return gspread.authorize(scoped_creds)
 
@@ -113,14 +113,14 @@ class GoogleSheetsClient:
             worksheet = self.client.open(spreadsheet_name).worksheet(
                 'last_updated')
 
-            # Update timestamp in A1
-            worksheet.update('A1', timestamp)
+            # Update timestamp in A2
+            worksheet.update('A2', timestamp)
 
-            # Update duration in A2 if provided
+            # Update duration in B2 if provided
             if duration_seconds is not None:
                 # Convert to minutes with 1 decimal
                 duration_str = f"{duration_seconds/60:.1f}"
-                worksheet.update('A2', duration_str)
+                worksheet.update('B2', duration_str)
 
         except Exception as e:
             print(f"Error updating timestamp: {e}")
@@ -130,8 +130,8 @@ class GoogleSheetsClient:
         try:
             worksheet = self.client.open(spreadsheet_name).worksheet(
                 'last_updated')
-            timestamp = worksheet.acell('A1').value
-            duration = worksheet.acell('A2').value
+            timestamp = worksheet.acell('A2').value
+            duration = worksheet.acell('B2').value
 
             return timestamp, duration
 
@@ -152,13 +152,8 @@ class GoogleSheetsClient:
                 worksheet = self.client.open(spreadsheet_name).worksheet(
                     'last_updated')
 
-                # Check if A3 cell exists or needs to be added
-                try:
-                    worksheet.acell('A3')  # Check if cell exists
-                    worksheet.update('A3', reason)
-                except Exception:
-                    # Add a header in row 3 if needed
-                    worksheet.update('A3:B3', [['Reason', reason]])
+                # Update reason
+                worksheet.update('A3:B3', [['Reason', reason]])
 
             except gspread.WorksheetNotFound:
                 # Create the worksheet if it doesn't exist
@@ -168,8 +163,11 @@ class GoogleSheetsClient:
                                                  cols=2)
                 worksheet.update('A1:B3', [[
                     'Last Update',
-                    datetime.now().strftime("%b %d %Y %H:%M:%S")
-                ], ['Duration (mins)', ''], ['Reason', reason]])
+                    [
+                        'Timestamp',
+                        datetime.now().strftime("%b %d %Y %H:%M:%S")
+                    ], ['Duration (mins)', ''], ['Reason', reason]
+                ]])
 
         except Exception as e:
             print(f"Error updating scrape reason: {e}")
