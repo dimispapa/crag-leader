@@ -40,7 +40,7 @@ class GoogleSheetsClient:
         """
         Authorize the gspread client using the provided credentials and scope.
         Handles both file-based credentials and dict/JSON credentials.
-        
+
         Returns:
             gspread.Client: Authorized gspread client.
         """
