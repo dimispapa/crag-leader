@@ -142,7 +142,9 @@ async def check_for_updates(last_scrape):
                   style="bold blue")
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch()
+        browser = await p.chromium.launch(
+            chromium_sandbox=False,  # Required for Heroku as per docs
+        )
         page = await browser.new_page()
 
         try:
