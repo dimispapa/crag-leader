@@ -63,7 +63,7 @@ def is_recent_update(ago_element, last_scrape_time: str) -> bool:
         return False
 
     try:
-        ago_text = ago_element.get_text(strip=True)
+        ago_text = ago_element.text
         ago_int = int(ago_text.split(" ")[0])
         ago_metric = ago_text.split(" ")[1]
 
@@ -155,7 +155,6 @@ def check_for_updates(last_scrape):
             ago_element = item.find_element(By.CSS_SELECTOR, "a.ago")
             ago_text = ago_element.text
 
-            # If the item is not recent (after last scrape), skip it
             if not is_recent_update(ago_element, last_scrape):
                 continue
 
