@@ -180,6 +180,11 @@ The future features are aligned with the future user goals:
 
 ## Technical Improvements (v1.2.0)
 
+- **Dual-Process Architecture**:
+  - Web Process: Node.js/Total.js framework serving the CLI interface
+  - Worker Process: Python-based background processing
+  - Clear separation of concerns between user interface and data processing
+
 - **Asynchronous Processing**: 
   - Implemented asynchronous operations using Python's `asyncio` library
   - Enables concurrent data collection from multiple boulders simultaneously
@@ -236,6 +241,10 @@ Below are direct access links to the validation of each python module with no is
 
 ### Main Programming Languages used
 - **[Python 3.12.2](https://www.python.org/)**
+- **[Node.js v22.14.0](https://nodejs.org/)**
+
+### Web Framework
+- **[Total.js v4](https://www.totaljs.com/)**: A Node.js framework used to serve the web-based CLI interface
 
 ### Third-party Python Modules used
 - **pandas**: for operations on dataframes and data processing on scraped data.

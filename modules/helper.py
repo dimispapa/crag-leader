@@ -195,29 +195,42 @@ async def async_scrape_data(headers: dict,
         clear()
         console.print("\nWriting data to google sheets ...\n",
                       style="bold yellow")
-        gsc.write_data_to_sheet('data', 'boulders', boulder_data,
-                                # Save space by setting rows and cols to
-                                # the nearest multiple of 10
-                                rows=round(len(boulder_data) / 10)*10,
-                                cols=round(len(boulder_data.columns) / 10)*10)
-        gsc.write_data_to_sheet('data', 'routes', route_data,
-                                # Save space by setting rows and cols to
-                                # the nearest multiple of 10
-                                rows=round(len(route_data) / 10)*10,
-                                cols=round(len(route_data.columns) / 10)*10)
-        gsc.write_data_to_sheet('data', 'ascents', ascent_data,
-                                # Save space by setting rows and cols to
-                                # the nearest multiple of 10
-                                rows=round(len(ascent_data) / 10)*10,
-                                cols=round(len(ascent_data.columns) / 10)*10)
-        gsc.update_timestamp('data', time.time() - start_time)
+        gsc.write_data_to_sheet(
+            'data',
+            'boulders',
+            boulder_data,
+            # Save space by setting rows and cols to
+            # the nearest multiple of 10
+            rows=round(len(boulder_data) / 10) * 10,
+            cols=round(len(boulder_data.columns) / 10) * 10)
+        gsc.write_data_to_sheet(
+            'data',
+            'routes',
+            route_data,
+            # Save space by setting rows and cols to
+            # the nearest multiple of 10
+            rows=round(len(route_data) / 10) * 10,
+            cols=round(len(route_data.columns) / 10) * 10)
+        gsc.write_data_to_sheet(
+            'data',
+            'ascents',
+            ascent_data,
+            # Save space by setting rows and cols to
+            # the nearest multiple of 10
+            rows=round(len(ascent_data) / 10) * 10,
+            cols=round(len(ascent_data.columns) / 10) * 10)
 
-        # Update the scrape reason
-        try:
-            gsc.update_scrape_reason('data',
-                                     "Manual scrape from web interface")
-        except Exception as e:
-            logger.debug(f"Could not update scrape reason: {e}")
+        duration_secs = time.time() - start_time
+
+        gsc.update_timestamp('data', duration_secs)
+
+        console.print(
+            f"\nScraping completed in {duration_secs/60:.2f} "
+            f"minutes.\n"
+            f"Data retrieved: \n- {len(boulder_data)} Boulders"
+            f"\n- {len(route_data)} Routes"
+            f"\n- {len(ascent_data)} Ascents\n",
+            style="bold green")
 
         return boulder_data, route_data, ascent_data
 

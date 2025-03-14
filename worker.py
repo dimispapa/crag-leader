@@ -247,9 +247,6 @@ def main():
             # Start time tracking
             start_time = time.time()
 
-            # Store the update reason
-            gsc.update_scrape_reason('data', "New routes or ascents detected")
-
             # Run the scraping process in a new event loop
             console.print("Starting scrape due to detected updates...",
                           style="bold green")
@@ -262,14 +259,13 @@ def main():
             finally:
                 loop.close()
 
-            # Calculate duration
-            duration_secs = time.time() - start_time
-
-            # Update timestamp with duration
-            gsc.update_timestamp('data', duration_secs)
-
             # Log completion
             if boulder_data:
+                # Calculate duration
+                duration_secs = time.time() - start_time
+                # Store the update reason
+                gsc.update_scrape_reason('data',
+                                         "New routes or ascents detected")
                 console.print(
                     f"\nScraping completed in {duration_secs/60:.2f} "
                     f"minutes.\n"

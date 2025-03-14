@@ -72,8 +72,7 @@ def get_user_choice():
             # Check if automated update is in progress
             if timestamp:
                 # Fetch the last update time
-                last_update = datetime.strptime(timestamp,
-                                                "%b %d %Y %H:%M:%S")
+                last_update = datetime.strptime(timestamp, "%b %d %Y %H:%M:%S")
                 # Calculate time since last update
                 time_since_update = datetime.now() - last_update
 
@@ -308,7 +307,11 @@ def main():
                     style="bold red")
                 return
 
+            # Clear the terminal
             clear()
+            # Update the scrape reason
+            GSC.update_scrape_reason('data',
+                                     "Manual scrape from web interface")
             console.print(
                 f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                 f"\n- {len(route_data)} Routes"
