@@ -196,18 +196,19 @@ def check_for_updates(last_scrape):
 def fetch_update_details(item, title_text, ago_text):
     """Process a single update item"""
     try:
-        user_element = item.find_element(By.CSS_SELECTOR, "a.user")
-        user_name = user_element.text
+        desc_element = item.find_element(By.CSS_SELECTOR, "div.description")
+        desc_text = desc_element.text
 
-        route_element = item.find_element(By.CSS_SELECTOR, "a.route")
-        route_name = route_element.text
+        climber_element = item.find_element(By.CSS_SELECTOR, "a.climber-name")
+        climber_name = climber_element.text
 
-        update_text = f"{user_name} - {route_name} ({ago_text})"
-        console.print(f"Found update: {update_text}", style="green")
-        return update_text
+        update_detail = f"{climber_name} {title_text} {ago_text} - {desc_text}"
+        console.print(f"Found update: {update_detail}", style="green")
+        return update_detail
+
     except Exception as e:
-        console.print(f"Error processing update item: {e}", style="red")
-        return f"Error processing update: {title_text}"
+        console.print(f"Error fetching update details: {e}", style="red")
+        return f"Error fetching update details: {title_text}"
 
 
 async def worker_processor():
