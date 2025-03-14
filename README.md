@@ -155,6 +155,10 @@ This includes the first user prompt with choices being to either "scrape" the la
        ![Volume leaderboard](documentation/screenshots/vol-lead-table.png)
      - Unique Ascents leaderboard
        ![Unique Ascents leaderboard](documentation/screenshots/unique-lead-table.png)
+     - Hardest Sends leaderboard **(new in v1.2.0)**
+       - Ranks climbers based on their top 5 hardest problems
+       - Double points awarded for flash ascents
+       - Uses the same base points system as other categories
      - Master Grade leaderboard
        - Sub-menu - user input for grade or 0 to return to main leaderboard menu.
        ![Master Grade Menu](documentation/screenshots/grade-lead-menu.png)
@@ -341,6 +345,7 @@ Below are direct access links to the validation of each python module with no is
 - Worker architecture using Heroku worker dynos
 - Batch processing for optimized performance
 - Scrape reason tracking to monitor update sources (automated vs. manual)
+- New "Hardest Sends" scoring category focusing on top 5 hardest problems with double points for flashes
 
 #### Changed
 - Migrated from Playwright to Selenium for better Heroku compatibility
@@ -348,6 +353,7 @@ Below are direct access links to the validation of each python module with no is
 - Reduced processing time by ~40% through parallelization
 - Enhanced CLI interface to display update status and history
 - Optimized buildpack configuration for Node.js and Python coexistence
+- Updated leaderboard menu to include new Hardest Sends category
 
 #### Fixed
 - Multiple bugs in CLI operations
