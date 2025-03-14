@@ -185,12 +185,12 @@ def check_for_updates(last_scrape):
             console.print(f"Found updates: {', '.join(update_items[:3])}",
                           style="bold green")
             updates_df = pd.DataFrame(update_items, columns=['Update Items'])
-            return updates_df
+            return True, updates_df
 
-        # If no updates, print message and return empty dataframe
+        # If no updates, print message and return False
         else:
             console.print("No new updates found", style="yellow")
-            return None
+            return False, None
 
     finally:
         driver.quit()
@@ -232,10 +232,10 @@ async def worker_processor():
             style="bold blue")
 
         # Check for updates
-        updates_df = check_for_updates(last_scrape)
+        has_updates, updates_df = check_for_updates(last_scrape)
 
         # If updates were found or it's been too long since last scrape
-        if updates_df:
+        if has_updates:
             # Write the update items to the sheet
             gsc.write_data_to_sheet(
                 'data',
