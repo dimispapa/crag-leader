@@ -241,8 +241,8 @@ def main():
                 'data',
                 f'updates_{datetime.now().strftime("%Y-%m-%d")}',
                 updates_df,
-                rows=round(len(updates_df) / 10) * 10,
-                cols=round(len(updates_df.columns) / 10) * 10)
+                rows=round(len(updates_df)+1 / 10) * 10,
+                cols=round(len(updates_df.columns)+1 / 10) * 10)
 
             # Start time tracking
             start_time = time.time()
