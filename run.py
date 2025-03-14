@@ -163,7 +163,10 @@ def leaderboard_mode(agg_table: pd.DataFrame,
               'on number of ascents counting 25 points every 5 ascents.'),
         '3': ('Unique Ascent Score', 'Unique Ascents leaderboard - ranks '
               'climbers by only counting unique ascents and awarding for'
-              'double the normal base points for the grade.')
+              'double the normal base points for the grade.'),
+        '4': ('Hardest Sends Score', 'Hardest Sends leaderboard - ranks '
+              'climbers based on their top 5 hardest problems with double '
+              'points for flashes.')
     }
 
     # keep looping until user decides to exit
@@ -173,14 +176,16 @@ def leaderboard_mode(agg_table: pd.DataFrame,
             "\nPlease choose a leaderboard to view or type "
             "'help' for more information:",
             style="bold cyan")
-        console.print("1 - Total Score leaderboard", style="bold cyan")
-        console.print("2 - Volume leaderboard", style="bold cyan")
+        console.print("1 - Overall Score leaderboard", style="bold cyan")
+        console.print("2 - Volume Score leaderboard", style="bold cyan")
         console.print("3 - Unique Ascents leaderboard", style="bold cyan")
-        console.print("4 - Master Grade leaderboard", style="bold cyan")
-        console.print("5 - Exit", style="bold cyan")
+        console.print("4 - Hardest Sends leaderboard", style="bold cyan")
+        console.print("5 - Master Grade leaderboard", style="bold cyan")
+        console.print("6 - Exit", style="bold cyan")
 
+        # Update the choice validation
         choice = Prompt.ask(
-            "[bold cyan]Enter your choice (1-5)").strip().lower()
+            "[bold cyan]Enter your choice (1-6)").strip().lower()
 
         # if choice is 1, 2 or 3
         if choice in leaderboard_options:
@@ -200,7 +205,7 @@ def leaderboard_mode(agg_table: pd.DataFrame,
             display_table(description, leaderboard)
 
         # Master Grade leaderboard
-        elif choice == '4':
+        elif choice == '5':
             # clear the terminal
             clear()
             # get available grade options
@@ -248,7 +253,7 @@ def leaderboard_mode(agg_table: pd.DataFrame,
                 sleep(1)
 
         # Exit the loop and leaderboard menu
-        elif choice == '5':
+        elif choice == '6':
             clear()
             console.print("\nExiting the leaderboard menu...\n",
                           style="bold red")
@@ -269,7 +274,7 @@ def leaderboard_mode(agg_table: pd.DataFrame,
             clear()
             console.print(
                 f"\nInvalid choice. You've entered '{choice}'."
-                " Please enter a number between 1 and 5, "
+                " Please enter a number between 1 and 6, "
                 "or type 'help' for more info.\n",
                 style="bold red")
 
@@ -344,7 +349,7 @@ def main():
 
     # prompt the user to choose the leaderboard
     # pass the calc_master_grade method of the score_calculator instance
-    # to be used if the user chooses option 4
+    # to be used if the user chooses option 5
     leaderboard_mode(aggregate_table, score_calculator)
 
 

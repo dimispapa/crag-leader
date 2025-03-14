@@ -57,29 +57,25 @@ class ScoreCalculator():
                 - unique_asc_bonus (float): A bonus factor for unique ascents.
         """
         # get scoring system parameters
-        base_points_data = self.gsc.get_sheet_data(file_name,
-                                                   'base_points')
-        volume_bonus_data = self.gsc.get_sheet_data(file_name,
-                                                    'volume_bonus')
+        base_points_data = self.gsc.get_sheet_data(file_name, 'base_points')
+        volume_bonus_data = self.gsc.get_sheet_data(file_name, 'volume_bonus')
         unique_ascent_data = self.gsc.get_sheet_data(file_name,
                                                      'unique_ascent_bonus')
 
         # reformat scoring system params into variables for easier use
-        base_points_dict = {str(row['Grade']): int(row['Points'])
-                            for row in base_points_data}
+        base_points_dict = {
+            str(row['Grade']): int(row['Points'])
+            for row in base_points_data
+        }
 
-        vol_bonus_incr = int(
-            volume_bonus_data[0].get('Bonus_increment'))
+        vol_bonus_incr = int(volume_bonus_data[0].get('Bonus_increment'))
 
         vol_bonus_points = int(
             volume_bonus_data[0].get('Points_per_increment'))
 
-        unique_asc_bonus = float(
-            unique_ascent_data[0].get('Bonus_factor'))
+        unique_asc_bonus = float(unique_ascent_data[0].get('Bonus_factor'))
 
-        return (base_points_dict,
-                vol_bonus_incr,
-                vol_bonus_points,
+        return (base_points_dict, vol_bonus_incr, vol_bonus_points,
                 unique_asc_bonus)
 
     def calc_base_points(self):
@@ -87,6 +83,7 @@ class ScoreCalculator():
         Calculate the base points for each ascent and add it to the DataFrame.
         If the ascent type is "flash", the base points are doubled.
         """
+
         # define a mappping function to apply on the dataframe
         def get_base_points(row):
             base_points = self.base_points_dict.get(row['Grade'], 0)
@@ -130,16 +127,40 @@ class ScoreCalculator():
             'Route Name').size().reset_index(name='Ascent Count')
 
         # Merge the ascent counts with the scoring table
-        self.scoring_table = self.scoring_table.merge(
-            ascent_counts, on='Route Name', how='left')
+        self.scoring_table = self.scoring_table.merge(ascent_counts,
+                                                      on='Route Name',
+                                                      how='left')
 
         # Calculate the unique ascent bonus
         self.scoring_table['Unique Ascent Score'] = self.scoring_table.apply(
             lambda row: row['Base Points'] +
             (row['Base Points'] * self.unique_asc_bonus)
             if row['Ascent Count'] == 1 else 0,
-            axis=1
-        ).astype(int)
+            axis=1).astype(int)
+
+    def calc_hardest_sends(self):
+        """
+        Calculate the hardest sends score based on top 5 hardest problems.
+        Flash ascents get double points.
+        """
+        # Create a copy of scoring table with only necessary columns
+        sends_table = self.scoring_table[[
+            'Climber Name', 'Grade', 'Ascent Type', 'Base Points'
+        ]]
+
+        # Group by climber and get their top 5 scores
+        hardest_sends = sends_table.groupby('Climber Name').apply(
+            lambda x: x.nlargest(5, 'Base Points')['Base Points'].sum(
+            )).reset_index(name='Hardest Sends Score')
+
+        # Merge the hardest sends scores back to the scoring table
+        self.scoring_table = self.scoring_table.merge(hardest_sends,
+                                                      on='Climber Name',
+                                                      how='left')
+
+        # Fill any NA values with 0
+        self.scoring_table['Hardest Sends Score'] = \
+            self.scoring_table['Hardest Sends Score'].fillna(0).astype(int)
 
     def aggregate_scores(self):
         """
@@ -151,15 +172,21 @@ class ScoreCalculator():
         """
         # group by climber and aggregate the scoring columns
         self.aggregate_table = self.scoring_table.groupby('Climber Name').agg({
-            'Base Points': 'sum',
-            'Volume Score': 'max',
-            'Unique Ascent Score': 'sum'
+            'Base Points':
+            'sum',
+            'Volume Score':
+            'max',
+            'Unique Ascent Score':
+            'sum',
+            'Hardest Sends Score':
+            'max'
         })
         # get the total tally based on the various scoring components
         self.aggregate_table['Total Score'] = \
             self.aggregate_table['Base Points'] + \
             self.aggregate_table['Volume Score'] + \
-            self.aggregate_table['Unique Ascent Score']
+            self.aggregate_table['Unique Ascent Score'] + \
+            self.aggregate_table['Hardest Sends Score']
 
         return self.aggregate_table
 
@@ -180,10 +207,8 @@ class ScoreCalculator():
             self.scoring_table.loc[
                 self.scoring_table['Grade'] == grade]
         # group by the climber and count the ascents per that grade
-        master_grade_table = master_grade_table.groupby(
-            'Climber Name').size().reset_index(
-                name=f'Num of {grade} Ascents'
-        ).set_index('Climber Name')
+        master_grade_table = master_grade_table.groupby('Climber Name').size(
+        ).reset_index(name=f'Num of {grade} Ascents').set_index('Climber Name')
 
         return master_grade_table
 
@@ -198,6 +223,7 @@ class ScoreCalculator():
         self.calc_base_points()
         self.calc_volume_bonus()
         self.calc_unique_ascent()
+        self.calc_hardest_sends()
         aggregate_table = self.aggregate_scores()
 
         return aggregate_table
