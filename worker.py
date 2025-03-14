@@ -86,7 +86,8 @@ def is_recent_update(ago_element, last_scrape_time: str) -> bool:
         # Convert last_scrape to datetime and compare
         try:
             last_scrape_dt = datetime.strptime(last_scrape_time,
-                                               '%Y-%m-%d %H:%M:%S')
+                                               "%b %d %Y %H:%M:%S")
+
             minutes_since_scrape = int(
                 (datetime.now() - last_scrape_dt).total_seconds() / 60)
 
@@ -96,13 +97,16 @@ def is_recent_update(ago_element, last_scrape_time: str) -> bool:
                 f"minutes ago, last scrape was {minutes_since_scrape} "
                 f"minutes ago[/]")
 
+            # Return True if update is more recent than last scrape
             return minutes_since_update < minutes_since_scrape
 
         except ValueError:
             console.print(
-                f"Error parsing last scrape timestamp: {last_scrape_time}",
+                f"Error parsing last scrape timestamp: {last_scrape_time}."
+                f"Treating as new update to be safe.",
                 style="bold red")
-            # If we can't parse the timestamp, treat as new update to be safe
+            # If we can't parse the timestamp,
+            # treat as new update to be safe
             return True
 
     except (ValueError, IndexError) as e:
@@ -228,7 +232,7 @@ async def worker_processor():
             style="bold blue")
 
         # Check for updates
-        updates_df = await check_for_updates(last_scrape)
+        updates_df = check_for_updates(last_scrape)
 
         # If updates were found or it's been too long since last scrape
         if updates_df:
@@ -259,9 +263,7 @@ async def worker_processor():
             gsc.update_timestamp('data', duration_secs)
 
             # Also update the last scrape time in new format
-            gsc.update_last_scrape_time(
-                'data',
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            gsc.update_timestamp('data', duration_secs)
 
             # Log completion
             if boulder_data:
