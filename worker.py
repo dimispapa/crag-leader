@@ -214,7 +214,7 @@ def fetch_update_details(item, title_text, ago_text):
         return f"Error fetching update details: {title_text}"
 
 
-async def worker_processor():
+def main():
     """Main worker process that checks for updates
     and runs scraping if needed"""
     console.print("Worker started, checking for updates...",
@@ -250,11 +250,17 @@ async def worker_processor():
             # Store the update reason
             gsc.update_scrape_reason('data', "New routes or ascents detected")
 
-            # Run the scraping process
+            # Run the scraping process in a new event loop
             console.print("Starting scrape due to detected updates...",
                           style="bold green")
-            boulder_data, route_data, ascent_data = await scrape_data(
-                HEADERS, CRAG_URL, gsc)
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                boulder_data, route_data, ascent_data = \
+                    loop.run_until_complete(
+                        scrape_data(HEADERS, CRAG_URL, gsc))
+            finally:
+                loop.close()
 
             # Calculate duration
             duration_secs = time.time() - start_time
@@ -285,4 +291,4 @@ async def worker_processor():
 
 
 if __name__ == "__main__":
-    asyncio.run(worker_processor())
+    main()

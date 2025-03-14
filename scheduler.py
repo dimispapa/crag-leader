@@ -1,13 +1,12 @@
 """
 Scheduled task for weekly data updates
 """
-import asyncio
-from worker import worker_processor
+from worker import main
 
 
 def scheduled_update():
     """Run the scheduled update task"""
-    asyncio.run(worker_processor())
+    main()
 
 
 if __name__ == "__main__":
