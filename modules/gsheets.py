@@ -110,7 +110,7 @@ class GoogleSheetsClient:
             duration_seconds (float): The duration in seconds.
         """
         try:
-            timestamp = datetime.now().strftime('%m-%d-%Y %H:%M:%S')
+            timestamp = datetime.now().strftime("%b %d %Y %H:%M:%S")
             worksheet = self.client.open(spreadsheet_name).worksheet(
                 'last_updated')
 
