@@ -268,9 +268,6 @@ def main():
             # Update timestamp with duration
             gsc.update_timestamp('data', duration_secs)
 
-            # Also update the last scrape time in new format
-            gsc.update_timestamp('data', duration_secs)
-
             # Log completion
             if boulder_data:
                 console.print(

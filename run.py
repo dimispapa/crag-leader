@@ -280,11 +280,7 @@ def leaderboard_mode(agg_table: pd.DataFrame,
 
 
 def main():
-    """
-    The main application function, prompting the user,
-    controlling the workflow and executing the imported
-    methods and functions as required.
-    """
+    """The main application function for web interface"""
     # begin by clearing the terminal to declutter
     clear()
     # Ensure all columns are shown next to each other when printing
@@ -301,23 +297,27 @@ def main():
 
     # if user choses to scrape, then call scrape_data function
     if choice == 'scrape':
-        boulder_data, route_data, ascent_data = scrape_data(
-            HEADERS, CRAG_URL, GSC)
+        try:
+            boulder_data, route_data, ascent_data = scrape_data(
+                HEADERS, CRAG_URL, GSC)
 
-        # Add error handling
-        if boulder_data is None:
+            if boulder_data is None:
+                console.print(
+                    "\nScraping failed. Please try using the 'retrieve' "
+                    "option or try again later.\n",
+                    style="bold red")
+                return
+
+            clear()
             console.print(
-                "\nScraping failed. Please try using the 'retrieve' "
-                "option or try again later.\n",
-                style="bold red")
-            return  # Exit the function
+                f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                f"\n- {len(route_data)} Routes"
+                f"\n- {len(ascent_data)} Ascents\n",
+                style="bold green")
 
-        clear()
-        console.print(
-            f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-            f"\n- {len(route_data)} Routes"
-            f"\n- {len(ascent_data)} Ascents\n",
-            style="bold green")
+        except Exception as e:
+            console.print(f"Error during scraping: {str(e)}", style="bold red")
+            return
 
     # if user chooses to retrieve, then call retrieve_data function
     # and simply retrieve the existing data on google drive

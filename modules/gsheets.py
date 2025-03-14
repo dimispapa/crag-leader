@@ -115,13 +115,13 @@ class GoogleSheetsClient:
                 'last_updated')
 
             # Update timestamp in B1
-            worksheet.update('B1', timestamp)
+            worksheet.update('B1', [[timestamp]])
 
             # Update duration in B2 if provided
             if duration_seconds is not None:
                 # Convert to minutes with 1 decimal
                 duration_str = f"{duration_seconds/60:.1f}"
-                worksheet.update('B2', duration_str)
+                worksheet.update('B2', [[duration_str]])
 
         except Exception as e:
             print(f"Error updating timestamp: {e}")
