@@ -65,19 +65,18 @@ def is_recent_update(ago_element, last_scrape_time: str) -> bool:
     try:
         ago_text = ago_element.text
         ago_int = int(ago_text.split(" ")[0])
-        ago_metric = ago_text.split(" ")[1]
+        ago_unit = ago_text.split(" ")[1]
 
         # Convert everything to minutes for easy comparison
         minutes_since_update = 0
-        if ago_metric == "days":
+        if ago_unit in ["days", "day"]:
             minutes_since_update = ago_int * 24 * 60
-        elif ago_metric == "hours":
+        elif ago_unit in ["hours", "hour"]:
             minutes_since_update = ago_int * 60
-        elif ago_metric == "minutes":
+        elif ago_unit in ["minutes", "minute"]:
             minutes_since_update = ago_int
         else:
-            console.print(f"Unknown ago metric: {ago_metric}",
-                          style="bold red")
+            console.print(f"Unknown ago unit: {ago_unit}", style="bold red")
             return False
 
         # If no last scrape time, treat as new update
@@ -182,12 +181,12 @@ def check_for_updates(last_scrape):
             console.print(f"Found updates: {', '.join(update_items[:3])}",
                           style="bold green")
             updates_df = pd.DataFrame(update_items, columns=['Update Items'])
-            return True, updates_df
+            return updates_df
 
         # If no updates, print message and return empty dataframe
         else:
             console.print("No new updates found", style="yellow")
-            return False, None
+            return None
 
     finally:
         driver.quit()
@@ -229,10 +228,10 @@ async def worker_processor():
             style="bold blue")
 
         # Check for updates
-        updates_found, updates_df = await check_for_updates(last_scrape)
+        updates_df = await check_for_updates(last_scrape)
 
         # If updates were found or it's been too long since last scrape
-        if updates_found:
+        if updates_df:
             # Write the update items to the sheet
             gsc.write_data_to_sheet(
                 'data',
