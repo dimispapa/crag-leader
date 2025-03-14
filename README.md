@@ -323,8 +323,9 @@ Below are direct access links to the validation of each python module with no is
 
 ## Changelog
 
-### Version 1.2.0 (2025-03-13)
+### Version 1.2.0 (2025-03-14)
 #### Added
+- Implemented Selenium-based update detection system
 - Asynchronous operations for concurrent data collection
 - Scheduled daily background checks for new changes 
 - Automatic update triggering when changes are detected
@@ -333,14 +334,18 @@ Below are direct access links to the validation of each python module with no is
 - Scrape reason tracking to monitor update sources (automated vs. manual)
 
 #### Changed
+- Migrated from Playwright to Selenium for better Heroku compatibility
 - Improved error handling throughout the application
 - Reduced processing time by ~40% through parallelization
 - Enhanced CLI interface to display update status and history
+- Optimized buildpack configuration for Node.js and Python coexistence
 
 #### Fixed
 - Multiple bugs in CLI operations
 - Credential handling for environment variables
 - Issues with Google Sheets timestamp updates
+- Heroku worker process stability
+- Browser compatibility issues in cloud environment
 
 ### Version 1.1.0 (2025-03-12)
 #### Added
