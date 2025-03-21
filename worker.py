@@ -260,7 +260,12 @@ def main():
                 loop.close()
 
             # Log completion
-            if boulder_data is not None:  # Explicit None check
+            if boulder_data is not None:
+                # Add debug info about sectors
+                sector_counts = boulder_data['Sector'].value_counts()
+                console.print(f"\nSector distribution:\n{sector_counts}\n",
+                              style="bold blue")
+
                 duration_secs = time.time() - start_time
                 gsc.update_scrape_reason('data',
                                          "New routes or ascents detected")

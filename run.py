@@ -17,6 +17,8 @@ from modules.helper import (scrape_data, retrieve_data, clear, welcome_msg,
                             rank_leaderboard)
 from datetime import datetime, timedelta
 import json
+import gspread
+
 # GLOBAL CONSTANTS
 # Define constants for scraping
 CRAG_URL = "https://27crags.com/crags/inia-droushia/"
@@ -317,27 +319,68 @@ def main():
             # Update the scrape reason
             GSC.update_scrape_reason('data',
                                      "Manual scrape from web interface")
+
+            # Add debug info about sectors if available
+            if 'Sector' in boulder_data.columns:
+                sector_counts = boulder_data['Sector'].value_counts()
+                console.print("\nSector distribution:", style="bold blue")
+                console.print(f"{sector_counts}\n", style="bold blue")
+                console.print(
+                    f"Unassigned boulders: "
+                    f"{len(
+                        boulder_data[boulder_data['Sector'] == 'Unassigned']
+                        )}",
+                    style="bold yellow")
+
             console.print(
                 f"\nData retrieved: \n- {len(boulder_data)} Boulders"
                 f"\n- {len(route_data)} Routes"
                 f"\n- {len(ascent_data)} Ascents\n",
                 style="bold green")
 
+        except gspread.WorksheetNotFound:
+            console.print(
+                "\nWarning: sector_boulder_mapping worksheet not found. "
+                "Sectors will be marked as 'Unassigned'.\n",
+                style="bold yellow")
         except Exception as e:
             console.print(f"Error during scraping: {str(e)}", style="bold red")
             return
 
     # if user chooses to retrieve, then call retrieve_data function
-    # and simply retrieve the existing data on google drive
     elif choice == 'retrieve':
-        boulder_data, route_data, ascent_data = \
-            retrieve_data(GSC)
-        clear()
-        console.print(
-            f"\nData retrieved: \n- {len(boulder_data)} Boulders"
-            f"\n- {len(route_data)} Routes"
-            f"\n- {len(ascent_data)} Ascents\n",
-            style="bold green")
+        try:
+            boulder_data, route_data, ascent_data = \
+                retrieve_data(GSC)
+            clear()
+
+            # Add debug info about sectors if available
+            if 'Sector' in boulder_data.columns:
+                sector_counts = boulder_data['Sector'].value_counts()
+                console.print("\nSector distribution:", style="bold blue")
+                console.print(f"{sector_counts}\n", style="bold blue")
+                console.print(
+                    f"Unassigned boulders: "
+                    f"{len(
+                        boulder_data[boulder_data['Sector'] == 'Unassigned']
+                        )}",
+                    style="bold yellow")
+
+            console.print(
+                f"\nData retrieved: \n- {len(boulder_data)} Boulders"
+                f"\n- {len(route_data)} Routes"
+                f"\n- {len(ascent_data)} Ascents\n",
+                style="bold green")
+
+        except gspread.WorksheetNotFound:
+            console.print(
+                "\nWarning: sector_boulder_mapping worksheet not found. "
+                "Sectors will be marked as 'Unassigned'.\n",
+                style="bold yellow")
+            return
+        except Exception as e:
+            console.print(f"Error retrieving data: {str(e)}", style="bold red")
+            return
 
     # initialize the score calculator class and calculate scores
     clear()

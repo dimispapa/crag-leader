@@ -71,13 +71,15 @@ def welcome_msg():
         style="bold cyan")
 
 
-def compile_data(crag: Crag):
+def compile_data(crag: Crag, gsc: client):
     """
     Compile data from a Crag instance into pandas DataFrames for boulders,
     routes, and ascents.
 
     Args:
         crag (Crag): An instance of the Crag class containing the scraped data.
+        gsc (GoogleSheetsClient): Google Sheets client instance for sector
+        mapping.
 
     Returns:
         tuple: A tuple containing three pandas DataFrames:
@@ -122,6 +124,10 @@ def compile_data(crag: Crag):
                                    "Route Name", "Grade", "Boulder Name",
                                    "Climber Name", "Ascent Type", "Ascent Date"
                                ])
+
+    # Add sector mapping to boulder and route data
+    boulder_data, route_data = add_sector_mapping(boulder_data, route_data,
+                                                  gsc)
 
     return boulder_data, route_data, ascent_data
 
@@ -188,8 +194,8 @@ async def async_scrape_data(headers: dict,
         # Get boulders asynchronously
         await crag.get_boulders_async(session)
 
-        # Compile data
-        boulder_data, route_data, ascent_data = compile_data(crag)
+        # Compile data with sector mapping
+        boulder_data, route_data, ascent_data = compile_data(crag, gsc)
 
         # Write to sheets
         clear()
@@ -201,24 +207,24 @@ async def async_scrape_data(headers: dict,
             boulder_data,
             # Save space by setting rows and cols to
             # the nearest multiple of 10
-            rows=round(len(boulder_data)+1 / 10) * 10,
-            cols=round(len(boulder_data.columns)+1 / 10) * 10)
+            rows=round(len(boulder_data) + 1 / 10) * 10,
+            cols=round(len(boulder_data.columns) + 1 / 10) * 10)
         gsc.write_data_to_sheet(
             'data',
             'routes',
             route_data,
             # Save space by setting rows and cols to
             # the nearest multiple of 10
-            rows=round(len(route_data)+1 / 10) * 10,
-            cols=round(len(route_data.columns)+1 / 10) * 10)
+            rows=round(len(route_data) + 1 / 10) * 10,
+            cols=round(len(route_data.columns) + 1 / 10) * 10)
         gsc.write_data_to_sheet(
             'data',
             'ascents',
             ascent_data,
             # Save space by setting rows and cols to
             # the nearest multiple of 10
-            rows=round(len(ascent_data)+1 / 10) * 10,
-            cols=round(len(ascent_data.columns)+1 / 10) * 10)
+            rows=round(len(ascent_data) + 1 / 10) * 10,
+            cols=round(len(ascent_data.columns) + 1 / 10) * 10)
 
         duration_secs = time.time() - start_time
 
@@ -293,3 +299,44 @@ def retrieve_data(gsc: client):
     console.print("\nData retrieval completed.\n", style="bold green")
 
     return boulder_data, route_data, ascent_data
+
+
+def add_sector_mapping(boulder_data: pd.DataFrame, route_data: pd.DataFrame,
+                       gsc: client) -> tuple:
+    """
+    Add sector information to boulder and route data using the
+    sector_boulder_mapping worksheet.
+
+    Args:
+        boulder_data (pd.DataFrame): DataFrame containing boulder information
+        route_data (pd.DataFrame): DataFrame containing route information
+        gsc (GoogleSheetsClient): Google Sheets client instance
+
+    Returns:
+        tuple: Updated (boulder_data, route_data) with sector information
+    """
+    try:
+        # Get the sector mapping data
+        sector_mapping = pd.DataFrame(
+            gsc.get_sheet_data('data', 'sector_boulder_mapping'))
+
+        # Merge sector info into boulder data
+        boulder_data = boulder_data.merge(sector_mapping,
+                                          on='Boulder Name',
+                                          how='left')
+
+        # Fill any missing sectors with 'Unassigned'
+        boulder_data['Sector'] = boulder_data['Sector'].fillna('Unassigned')
+
+        # Add sector information to route data
+        route_data = route_data.merge(boulder_data[['Boulder Name', 'Sector']],
+                                      on='Boulder Name',
+                                      how='left')
+        route_data['Sector'] = route_data['Sector'].fillna('Unassigned')
+
+        return boulder_data, route_data
+
+    except Exception as e:
+        console.print(f"Error adding sector mapping: {e}", style="bold red")
+        # Return original data if mapping fails
+        return boulder_data, route_data
