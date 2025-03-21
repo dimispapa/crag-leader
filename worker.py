@@ -241,8 +241,8 @@ def main():
                 'data',
                 f'updates_{datetime.now().strftime("%Y-%m-%d")}',
                 updates_df,
-                rows=round(len(updates_df)+1 / 10) * 10,
-                cols=round(len(updates_df.columns)+1 / 10) * 10)
+                rows=round(len(updates_df) + 1 / 10) * 10,
+                cols=round(len(updates_df.columns) + 1 / 10) * 10)
 
             # Start time tracking
             start_time = time.time()
@@ -260,10 +260,8 @@ def main():
                 loop.close()
 
             # Log completion
-            if boulder_data:
-                # Calculate duration
+            if boulder_data is not None:  # Explicit None check
                 duration_secs = time.time() - start_time
-                # Store the update reason
                 gsc.update_scrape_reason('data',
                                          "New routes or ascents detected")
                 console.print(
@@ -281,6 +279,7 @@ def main():
 
     except Exception as e:
         console.print(f"Error in worker process: {str(e)}", style="bold red")
+        raise  # Re-raise to ensure the process exits with error status
 
 
 if __name__ == "__main__":
